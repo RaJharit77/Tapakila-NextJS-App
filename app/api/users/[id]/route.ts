@@ -22,8 +22,12 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
 
 export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
     try {
-        const body = await request.json()
-        const { id } = await params
+        const body = await request.json();
+        const { id } = await params;
+
+        console.log("Updating user with ID:", id);
+        console.log("Data to update:", body);
+
         const userToUpdate = await prisma.user.findUnique({
             where: {
                 user_id: id
