@@ -5,29 +5,49 @@ import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { FaArrowLeft, FaTicketAlt } from "react-icons/fa";
 
-export default function EventPage({ params }: { params: { eventId: string } }) {
+export default function EventPage() {
     const [event, setEvent] = useState<any>(null);
+    const [error, setError] = useState<string | null>(null);
     const { eventId } = useParams() as { eventId: string };
     const router = useRouter();
 
     useEffect(() => {
         async function fetchEvent() {
+            if (!eventId) {
+                setError("Event ID is missing");
+                return;
+            }
+            
             try {
                 const response = await fetch(`/api/events/${eventId}`);
                 if (!response.ok) {
-                    throw new Error("Événement non trouvé");
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || "Événement non trouvé");
                 }
                 const eventData = await response.json();
                 setEvent(eventData);
             } catch (error) {
                 console.error(error);
+                setError(error instanceof Error ? error.message : "Une erreur s'est produite");
             }
         }
         fetchEvent();
     }, [eventId]);
 
-    if (!event) {
-        return <div className="text-center text-bleuNuit mt-8">Événement non trouvé</div>;
+    if (error || !event) {
+        return (
+            <div
+                className="min-h-screen flex items-center justify-center bg-cover bg-center"
+                style={{
+                    backgroundImage: "url('/img/bgEventId.jpg')",
+                }}
+            >
+                <div className="absolute inset-0 bg-black bg-opacity-70 pointer-events-none"></div>
+                <div className="relative z-10 text-center text-red-500 text-xl">
+                    {"Événement non trouvé"}
+                </div>
+            </div>
+        );
     }
 
     return (

@@ -9,7 +9,7 @@ interface User {
     user_id: string;
     user_name: string;
     user_email: string;
-    date_joined: string;
+    user_first_login_date: string;
     city: string;
     postal_code: string;
     country: string;

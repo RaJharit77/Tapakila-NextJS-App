@@ -1,11 +1,18 @@
 import { prisma } from "@/lib/prisma";
 
-export async function GET(request: Request, { params }: { params: { id: string } }) {
-    const { id } = params;
+export async function GET(request: Request, { params }: { params: { eventId: string } }) {
+    const { eventId } = params;
+    if (!eventId) {
+        return new Response(JSON.stringify({ error: "Event ID is required" }), {
+            status: 400,
+            headers: { 'Content-Type': 'application/json' },
+        });
+    }
+
     try {
         const event = await prisma.event.findUnique({
             where: {
-                event_id: id,
+                event_id: eventId,
             },
             include: {
                 tickets: true,
