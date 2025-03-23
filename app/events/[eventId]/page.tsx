@@ -8,6 +8,7 @@ import { FaArrowLeft, FaTicketAlt } from "react-icons/fa";
 export default function EventPage() {
     const [event, setEvent] = useState<any>(null);
     const [error, setError] = useState<string | null>(null);
+    const [loading, setLoading] = useState<boolean>(true);
     const { eventId } = useParams() as { eventId: string };
     const router = useRouter();
 
@@ -15,6 +16,7 @@ export default function EventPage() {
         async function fetchEvent() {
             if (!eventId) {
                 setError("Event ID is missing");
+                setLoading(false);
                 return;
             }
 
@@ -29,23 +31,33 @@ export default function EventPage() {
             } catch (error) {
                 console.error(error);
                 setError(error instanceof Error ? error.message : "Une erreur s'est produite");
+            } finally {
+                setLoading(false);
             }
         }
         fetchEvent();
     }, [eventId]);
 
-    if (error || !event) {
+    if (loading) {
         return (
             <div
                 className="min-h-screen flex items-center justify-center bg-cover bg-center"
-                style={{
-                    backgroundImage: "url('/img/bgEventId.jpg')",
-                }}
+                style={{ backgroundImage: "url('/img/bgEventId.jpg')" }}
             >
                 <div className="absolute inset-0 bg-black bg-opacity-70 pointer-events-none"></div>
-                <div className="relative z-10 text-center text-red-500 text-xl">
-                    {"Événement non trouvé"}
-                </div>
+                <div className="relative z-10 text-center text-blancGlacialNeutre text-xl">Chargement...</div>
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div
+                className="min-h-screen flex items-center justify-center bg-cover bg-center"
+                style={{ backgroundImage: "url('/img/bgEventId.jpg')" }}
+            >
+                <div className="absolute inset-0 bg-black bg-opacity-70 pointer-events-none"></div>
+                <div className="relative z-10 text-center text-red-500 text-xl">{error}</div>
             </div>
         );
     }
@@ -53,9 +65,7 @@ export default function EventPage() {
     return (
         <div
             className="min-h-screen py-40 px-4 sm:px-6 lg:px-8 relative bg-cover bg-center"
-            style={{
-                backgroundImage: "url('/img/bgEventId.jpg')",
-            }}
+            style={{ backgroundImage: "url('/img/bgEventId.jpg')" }}
         >
             <div className="absolute inset-0 bg-black bg-opacity-70 pointer-events-none"></div>
 
@@ -108,7 +118,6 @@ export default function EventPage() {
                             />
 
                             <button
-                                /*onClick={() => router.push(`/events/${eventId}/book`)}*/
                                 className="mt-6 w-full bg-bleuElec text-blancCasse px-4 py-2 rounded-lg hover:bg-bleuNuit transition-colors flex items-center justify-center"
                             >
                                 <FaTicketAlt className="mr-2" />

@@ -73,7 +73,7 @@ export default function Navbar() {
                         </Link>
                         <Link
                             href="/"
-                            className="text-xl font-bold text-blancCasse hover:text-transparent hover:bg-clip-text hover:bg-gradient-to-r from-bleuElec to-orMetallique transition-all duration-300 hover-neon"
+                            className="text-xl font-bold text-blancGlacialNeutre hover:text-transparent hover:bg-clip-text hover:bg-gradient-to-r from-bleuElec to-orMetallique transition-all duration-300 hover-neon"
                         >
                             <span className="text-bleuElec">Tap</span>
                             <span className="text-orMetallique">akila</span>
@@ -82,7 +82,7 @@ export default function Navbar() {
 
                     <form
                         onSubmit={handleSearchSubmit}
-                        className={`hidden lg:flex items-center bg-gray-100 text-bleuNuit rounded-xl px-3 py-2 w-1/3 transition-all duration-300 ${isSearchFocused || searchValue
+                        className={`hidden lg:flex items-center bg-blancGlacialNeutre text-bleuNuit rounded-xl px-3 py-2 w-1/3 transition-all duration-300 ${isSearchFocused || searchValue
                                 ? "shadow-neon-orMetallique"
                                 : ""
                             }`}
@@ -102,7 +102,7 @@ export default function Navbar() {
                     <div className="lg:hidden flex items-center">
                         <button
                             onClick={() => setIsSearchOpen(!isSearchOpen)}
-                            className={`text-blancCasse p-2 ${!isScrolled && !isMenuOpen ? "bg-bleuNuit bg-opacity-50 rounded-full" : ""
+                            className={`text-blancGlacialNeutre p-2 ${!isScrolled && !isMenuOpen ? "bg-bleuNuit bg-opacity-50 rounded-full" : ""
                                 }`}
                         >
                             <FaSearch size={20} />
@@ -112,7 +112,7 @@ export default function Navbar() {
                     <div className="lg:hidden flex items-center">
                         <button
                             onClick={() => setIsMenuOpen(!isMenuOpen)}
-                            className="text-blancCasse p-2"
+                            className="text-blancGlacialNeutre p-2"
                         >
                             {isMenuOpen ? <FaTimes size={20} /> : <FaBars size={20} />}
                         </button>
@@ -121,34 +121,34 @@ export default function Navbar() {
                     <div className="hidden lg:flex items-center space-x-6">
                         <Link
                             href="/"
-                            className="text-blancCasse hover:text-transparent hover:bg-clip-text hover:bg-gradient-to-r from-bleuElec to-orMetallique transition-all duration-300 hover-neon underline-uncurved"
+                            className="text-blancGlacialNeutre hover:text-transparent hover:bg-clip-text hover:bg-gradient-to-r from-bleuElec to-orMetallique transition-all duration-300 hover-neon underline-uncurved"
                         >
                             Accueil
                         </Link>
                         <Link
                             href="/events"
-                            className="text-blancCasse hover:text-transparent hover:bg-clip-text hover:bg-gradient-to-r from-bleuElec to-orMetallique transition-all duration-300 hover-neon underline-uncurved"
+                            className="text-blancGlacialNeutre hover:text-transparent hover:bg-clip-text hover:bg-gradient-to-r from-bleuElec to-orMetallique transition-all duration-300 hover-neon underline-uncurved"
                         >
                             Événements
                         </Link>
                         <Link
                             href="/contact"
-                            className="text-blancCasse hover:text-transparent hover:bg-clip-text hover:bg-gradient-to-r from-bleuElec to-orMetallique transition-all duration-300 hover-neon underline-uncurved"
+                            className="text-blancGlacialNeutre hover:text-transparent hover:bg-clip-text hover:bg-gradient-to-r from-bleuElec to-orMetallique transition-all duration-300 hover-neon underline-uncurved"
                         >
                             Contact
                         </Link>
                         {isLoggedIn ? (
                             <div className="flex items-center space-x-4">
-                                <span className="text-blancCasse">{userName}</span>
+                                <span className="text-blancGlacialNeutre">{userName}</span>
                                 <Link
                                     href="/dashboard/profile"
-                                    className="glowing-button flex items-center text-blancCasse hover:text-bleuNuit px-4 py-2"
+                                    className="glowing-button flex items-center text-blancGlacialNeutre hover:text-bleuNuit px-4 py-2"
                                 >
                                     <FaUser className="mr-2" />
                                 </Link>
                                 <button
                                     onClick={handleLogout}
-                                    className="glowing-button flex items-center text-blancCasse hover:text-bleuNuit px-4 py-2"
+                                    className="glowing-button flex items-center text-blancGlacialNeutre hover:text-bleuNuit px-4 py-2"
                                 >
                                     <FaSignOutAlt className="mr-2" />
                                 </button>
@@ -156,7 +156,7 @@ export default function Navbar() {
                         ) : (
                             <Link
                                 href="/login"
-                                className="glowing-button flex items-center text-blancCasse hover:text-bleuNuit px-4 py-2"
+                                className="glowing-button flex items-center text-blancGlacialNeutre hover:text-bleuNuit px-4 py-2"
                             >
                                 <FaUser className="mr-2" />
                                 Se Connecter
@@ -169,7 +169,7 @@ export default function Navbar() {
                     <div className="lg:hidden mt-4 transition-all duration-300">
                         <form
                             onSubmit={handleSearchSubmit}
-                            className={`flex items-center bg-gray-100 text-bleuNuit rounded-xl px-3 py-2 ${isSearchFocused || searchValue
+                            className={`flex items-center bg-blancGlacialNeutre text-bleuNuit rounded-xl px-3 py-2 ${isSearchFocused || searchValue
                                     ? "shadow-neon-orMetallique"
                                     : ""
                                 }`}
@@ -193,19 +193,19 @@ export default function Navbar() {
                         <div className="flex flex-col space-y-4 bg-bleuNuit p-4 rounded-lg">
                             <Link
                                 href="/"
-                                className="text-blancCasse hover:text-transparent hover:bg-clip-text hover:bg-gradient-to-r from-bleuElec to-orMetallique transition-all duration-300 hover-neon"
+                                className="text-blancGlacialNeutre hover:text-transparent hover:bg-clip-text hover:bg-gradient-to-r from-bleuElec to-orMetallique transition-all duration-300 hover-neon"
                             >
                                 Accueil
                             </Link>
                             <Link
                                 href="/events"
-                                className="text-blancCasse hover:text-transparent hover:bg-clip-text hover:bg-gradient-to-r from-bleuElec to-orMetallique transition-all duration-300 hover-neon"
+                                className="text-blancGlacialNeutre hover:text-transparent hover:bg-clip-text hover:bg-gradient-to-r from-bleuElec to-orMetallique transition-all duration-300 hover-neon"
                             >
                                 Événements
                             </Link>
                             <Link
                                 href="/contact"
-                                className="text-blancCasse hover:text-transparent hover:bg-clip-text hover:bg-gradient-to-r from-bleuElec to-orMetallique transition-all duration-300 hover-neon"
+                                className="text-blancGlacialNeutre hover:text-transparent hover:bg-clip-text hover:bg-gradient-to-r from-bleuElec to-orMetallique transition-all duration-300 hover-neon"
                             >
                                 Contacts
                             </Link>
@@ -213,14 +213,14 @@ export default function Navbar() {
                                 <div className="flex flex-col space-y-4">
                                     <Link
                                         href="/dashboard/profile"
-                                        className="glowing-button flex items-center justify-center text-blancCasse hover:text-bleuNuit px-4 py-2"
+                                        className="glowing-button flex items-center justify-center text-blancGlacialNeutre hover:text-bleuNuit px-4 py-2"
                                     >
                                         <FaUser className="mr-2" />
                                         Profil
                                     </Link>
                                     <button
                                         onClick={handleLogout}
-                                        className="glowing-button flex items-center justify-center text-blancCasse hover:text-bleuNuit px-4 py-2"
+                                        className="glowing-button flex items-center justify-center text-blancGlacialNeutre hover:text-bleuNuit px-4 py-2"
                                     >
                                         <FaSignOutAlt className="mr-2" />
                                         Déconnexion
@@ -229,7 +229,7 @@ export default function Navbar() {
                             ) : (
                                 <Link
                                     href="/login"
-                                    className="glowing-button flex items-center justify-center text-blancCasse hover:text-bleuNuit px-4 py-2"
+                                    className="glowing-button flex items-center justify-center text-blancGlacialNeutre hover:text-bleuNuit px-4 py-2"
                                 >
                                     <FaUser className="mr-2" />
                                     Se Connecter
