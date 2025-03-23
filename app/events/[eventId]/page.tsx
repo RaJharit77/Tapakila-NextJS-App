@@ -17,7 +17,7 @@ export default function EventPage() {
                 setError("Event ID is missing");
                 return;
             }
-            
+
             try {
                 const response = await fetch(`/api/events/${eventId}`);
                 if (!response.ok) {
@@ -108,9 +108,7 @@ export default function EventPage() {
                             />
 
                             <button
-                                onClick={() => {
-                                    alert("Fonctionnalité de réservation à implémenter !");
-                                }}
+                                /*onClick={() => router.push(`/events/${eventId}/book`)}*/
                                 className="mt-6 w-full bg-bleuElec text-blancCasse px-4 py-2 rounded-lg hover:bg-bleuNuit transition-colors flex items-center justify-center"
                             >
                                 <FaTicketAlt className="mr-2" />
