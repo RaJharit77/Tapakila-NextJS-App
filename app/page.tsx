@@ -61,7 +61,7 @@ export default function Home() {
   const pastEvents = events.filter((event) => new Date(event.date) < currentDate);
 
   return (
-    <div className="bg-blancGlacialNeutre min-h-screen">
+    <div className="bg-blancCasse min-h-screen">
       <section
         className="relative h-screen flex items-center justify-start bg-cover bg-center"
         style={{
@@ -69,9 +69,9 @@ export default function Home() {
         }}
       >
         <div className="absolute inset-0 bg-black bg-opacity-50"></div>
-        <div className="relative z-10 text-blancGlacialNeutre px-8 lg:px-16">
+        <div className="relative z-10 text-blancCasse px-8 lg:px-16">
           {loading ? (
-            <div className="text-center justify-center text-blancGlacialNeutre text-xl py-36">
+            <div className="text-center justify-center text-blancCasse text-xl py-36">
               Chargement en cours...
             </div>
           ) : error ? (
@@ -87,7 +87,7 @@ export default function Home() {
                 </p>
                 <Link
                   href="/events"
-                  className="bg-bleuElec text-blancGlacialNeutre px-6 py-3 rounded-lg text-lg hover:bg-bleuNuit hover:text-orMetallique transition-colors"
+                  className="bg-bleuElec text-blancCasse px-6 py-3 rounded-lg text-lg hover:bg-bleuNuit hover:text-orMetallique transition-colors"
                 >
                   Découvrir Maintenant
                 </Link>
@@ -105,7 +105,7 @@ export default function Home() {
       >
         <div className="absolute inset-0 bg-black bg-opacity-50"></div>
         <div className="relative z-10">
-          <h2 className="text-2xl font-bold text-blancGlacialNeutre mb-8 text-center">
+          <h2 className="text-2xl font-bold text-blancCasse mb-8 text-center">
             Événements à l'affiche
           </h2>
           {upcomingEvents.length > 0 ? (
@@ -132,7 +132,7 @@ export default function Home() {
               ))}
             </Swiper>
           ) : (
-            <p className="text-blancGlacialNeutre text-xl text-center">
+            <p className="text-blancCasse text-lg text-center">
               Aucun événement à l'affiche pour le moment.
             </p>
           )}
@@ -147,7 +147,7 @@ export default function Home() {
       >
         <div className="absolute inset-0 bg-black bg-opacity-50"></div>
         <div className="relative z-10">
-          <h2 className="text-2xl font-bold text-blancGlacialNeutre mb-8 text-center">
+          <h2 className="text-2xl font-bold text-blancCasse mb-8 text-center">
             Événements à Venir
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -156,7 +156,7 @@ export default function Home() {
                 <EventCard key={event.id} {...event} />
               ))
             ) : (
-              <p className="text-blancGlacialNeutre text-xl text-center">
+              <p className="text-blancCasse text-lg text-center">
                 Aucun événement à venir pour le moment.
               </p>
             )}
@@ -172,7 +172,7 @@ export default function Home() {
       >
         <div className="absolute inset-0 bg-black bg-opacity-50"></div>
         <div className="relative z-10">
-          <h2 className="text-2xl font-bold text-blancGlacialNeutre mb-8">Spectacles & Concerts</h2>
+          <h2 className="text-2xl font-bold text-blancCasse mb-8">Spectacles & Concerts</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {upcomingEvents.filter((event) => event.category === "Spectacle" || event.category === "Concert").length > 0 ? (
               upcomingEvents
@@ -181,7 +181,7 @@ export default function Home() {
                   <EventCard key={event.id} {...event} />
                 ))
             ) : (
-              <p className="text-blancGlacialNeutre text-xl text-center">
+              <p className="text-blancCasse text-lg text-center">
                 Aucun spectacle ou concert disponible pour le moment.
               </p>
             )}
@@ -197,7 +197,7 @@ export default function Home() {
       >
         <div className="absolute inset-0 bg-black bg-opacity-50"></div>
         <div className="relative z-10">
-          <h2 className="text-2xl font-bold text-blancGlacialNeutre mb-8">Festival & Culture</h2>
+          <h2 className="text-2xl font-bold text-blancCasse mb-8">Festival & Culture</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {upcomingEvents.filter((event) => event.category === "Culture" || event.category === "Théâtre" || event.category === "Festival").length > 0 ? (
               upcomingEvents
@@ -206,7 +206,7 @@ export default function Home() {
                   <EventCard key={event.id} {...event} />
                 ))
             ) : (
-              <p className="text-blancGlacialNeutre text-xl text-center">
+              <p className="text-blancCasse text-lg text-center">
                 Aucun festival ou événement culturel disponible pour le moment.
               </p>
             )}
@@ -222,7 +222,7 @@ export default function Home() {
       >
         <div className="absolute inset-0 bg-black bg-opacity-50"></div>
         <div className="relative z-10">
-          <h2 className="text-2xl font-bold text-blancGlacialNeutre mb-8">Sports & Loisirs</h2>
+          <h2 className="text-2xl font-bold text-blancCasse mb-8">Sports & Loisirs</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {upcomingEvents.filter((event) => event.category === "Sport" || event.category === "Loisir").length > 0 ? (
               upcomingEvents
@@ -231,7 +231,7 @@ export default function Home() {
                   <EventCard key={event.id} {...event} />
                 ))
             ) : (
-              <p className="text-blancGlacialNeutre text-xl text-center">
+              <p className="text-blancCasse text-lg text-center">
                 Aucun événement sportif disponible pour le moment.
               </p>
             )}
@@ -247,7 +247,7 @@ export default function Home() {
       >
         <div className="absolute inset-0 bg-black bg-opacity-50"></div>
         <div className="relative z-10">
-          <h2 className="text-2xl font-bold text-blancGlacialNeutre mb-8">Autres</h2>
+          <h2 className="text-2xl font-bold text-blancCasse mb-8">Autres</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {upcomingEvents.filter((event) => event.category === "Autres" || event.category === "Conférence").length > 0 ? (
               upcomingEvents
@@ -256,7 +256,7 @@ export default function Home() {
                   <EventCard key={event.id} {...event} />
                 ))
             ) : (
-              <p className="text-blancGlacialNeutre text-xl text-center">
+              <p className="text-blancCasse text-lg text-center">
                 Aucun autre événement disponible pour le moment.
               </p>
             )}
@@ -272,7 +272,7 @@ export default function Home() {
       >
         <div className="absolute inset-0 bg-black bg-opacity-50"></div>
         <div className="relative z-10">
-          <h2 className="text-2xl font-bold text-blancGlacialNeutre mb-8">
+          <h2 className="text-2xl font-bold text-blancCasse mb-8">
             Événements Passés
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -281,7 +281,7 @@ export default function Home() {
                 <EventCard key={event.id} {...event} />
               ))
             ) : (
-              <p className="text-blancGlacialNeutre text-xl text-center">
+              <p className="text-blancCasse text-lg text-center">
                 Aucun événement passé disponible pour le moment.
               </p>
             )}

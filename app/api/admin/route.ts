@@ -29,7 +29,6 @@ export async function POST(request: Request) {
     const accessToken = sign(
       { email: user.admin_mail, password: user.admin_password },
       process.env.JWT_SECRET!,
-      { expiresIn: "1h" }
     );
 
     // Renvoyer une réponse réussie

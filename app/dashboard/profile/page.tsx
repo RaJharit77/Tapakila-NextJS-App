@@ -28,7 +28,7 @@ const ProfilePage = () => {
                 user_id: parsedUser.user_id || "",
                 user_name: parsedUser.name || "",
                 user_email: parsedUser.email || "",
-                date_joined: parsedUser.user_first_login_date || new Date().toISOString(),
+                date_joined: parsedUser.date_joined || new Date().toISOString(),
                 city: parsedUser.city || "",
                 postal_code: parsedUser.postal_code || "",
                 country: parsedUser.country || "",
