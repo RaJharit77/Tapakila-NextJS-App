@@ -6,6 +6,8 @@ import { Poppins } from "next/font/google";
 import { ReactNode } from "react";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { Toaster } from 'react-hot-toast';
+import { SessionProvider } from "next-auth/react";
 
 const poppins = Poppins({
   subsets: ["latin"],
@@ -24,15 +26,18 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en" className={poppins.className}>
       <body>
-        <div>
-          <Navbar />
-          <main className="pt-0">
-            {children}
-            <ToastContainer />
-            <Analytics />
-          </main>
-          <Footer />
-        </div>
+        <SessionProvider>
+          <div>
+            <Navbar />
+            <main className="pt-0">
+              {children}
+              <ToastContainer />
+              <Toaster />
+              <Analytics />
+            </main>
+            <Footer />
+          </div>
+        </SessionProvider>
       </body>
     </html>
   );

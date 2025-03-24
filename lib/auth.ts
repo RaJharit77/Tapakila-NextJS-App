@@ -56,7 +56,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         },
 
         async session({ session, token, }) {
-            // Send properties to the client, like an access_token from a provider.
             session.user.id = token.id as string
             session.user.email = token.email ?? ""
             session.user.name = token.name
@@ -67,6 +66,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     },
 
     pages: {
-        signIn: "/login", // Page de connexion personnalisée
+        signIn: "/login",
     },
 })

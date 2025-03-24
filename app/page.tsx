@@ -3,6 +3,7 @@
 import EventCard from "@/components/EventCard";
 import { Slide } from "@mui/material";
 import Link from "next/link";
+import { toast } from "react-hot-toast";
 import { useEffect, useState } from "react";
 import "swiper/css";
 import "swiper/css/navigation";
@@ -25,16 +26,19 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showContent, setShowContent] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
     async function fetchEvents() {
       try {
         const response = await fetch("/api/events");
-        console.log("Réponse de l'API :", response);
+
         if (!response.ok) {
           throw new Error("Erreur de chargement de la page");
         }
+
         const data = await response.json();
+
         const formattedEvents = data.map((event: any) => ({
           id: event.event_id,
           name: event.event_name,
@@ -44,7 +48,9 @@ export default function Home() {
           imageUrl: event.event_image,
           category: event.event_category || "Autres",
         }));
+
         setEvents(formattedEvents);
+
       } catch (err) {
         setError(err instanceof Error ? err.message : "An error occurred");
       } finally {
@@ -54,6 +60,14 @@ export default function Home() {
     }
     fetchEvents();
   }, []);
+
+  const handleDiscoverClick = () => {
+    if (!isAuthenticated) {
+      toast.error("Vous devez créer un compte pour accéder aux événements.");
+    } else {
+      window.location.href = "/events";
+    }
+  };
 
   const currentDate = new Date();
 
@@ -85,12 +99,12 @@ export default function Home() {
                 <p className="text-xl mb-8">
                   Découvrez et réservez vos billets <br />pour les meilleurs événements de votre vie.
                 </p>
-                <Link
-                  href="/events"
+                <button
+                  onClick={handleDiscoverClick}
                   className="bg-bleuElec text-blancGlacialNeutre px-6 py-3 rounded-lg text-lg hover:bg-bleuNuit hover:text-orMetallique transition-colors"
                 >
                   Découvrir Maintenant
-                </Link>
+                </button>
               </div>
             </Slide>
           )}
