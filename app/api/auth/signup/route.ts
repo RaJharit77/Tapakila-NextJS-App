@@ -20,6 +20,7 @@ export async function POST(req: NextRequest) {
                 user_name: name,
                 user_email: email,
                 user_password: hashedPassword,
+                user_first_login_date: new Date().toISOString(),
             },
         });
 

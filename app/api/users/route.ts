@@ -11,7 +11,10 @@ export async function GET(request: Request) {
         const offset = (page - 1) * pageSize
         const users = await prisma.user.findMany({
             take: pageSize,
-            skip: offset
+            skip: offset,
+            include: {
+                tickets: true
+            }
         });
 
         return new Response(JSON.stringify(users), { status: 200, headers: { "Content-Type": "application/json" } })
