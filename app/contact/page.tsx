@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { FaEnvelope } from "react-icons/fa";
+import { toast } from 'react-hot-toast';
 import { FaFacebook, FaInstagram, FaLinkedinIn, FaPhone } from 'react-icons/fa6';
 
 export default function ContactPage() {
@@ -21,16 +22,16 @@ export default function ContactPage() {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        // Récupérer l'utilisateur connecté depuis localStorage
         const storedUser = localStorage.getItem("user");
+
         if (!storedUser) {
-            setStatus({ message: "Vous devez être connecté pour envoyer un message.", type: "error" });
-            router.push("/login"); // Rediriger vers la page de connexion
+            toast.error("Vous devez être connecté pour envoyer un message.");
+            router.push("/login");
             return;
         }
 
         const user = JSON.parse(storedUser);
-        const user_id = user.user_id; // Récupérer l'ID de l'utilisateur
+        const user_id = user.user_id;
 
         try {
             const response = await fetch("/api/contact", {
@@ -39,7 +40,7 @@ export default function ContactPage() {
                     "Content-Type": "application/json",
                 },
                 body: JSON.stringify({
-                    user_id: user_id, // Ajouter l'ID de l'utilisateur
+                    user_id: user_id,
                     subject: formData.subject,
                     message: formData.message,
                 }),
@@ -98,9 +99,8 @@ export default function ContactPage() {
                     </form>
                     {status && (
                         <p
-                            className={`text-center mt-4 ${
-                                status.type === "success" ? "text-green-500" : "text-red-500"
-                            }`}
+                            className={`text-center mt-4 ${status.type === "success" ? "text-green-500" : "text-red-500"
+                                }`}
                         >
                             {status.message}
                         </p>
@@ -116,7 +116,7 @@ export default function ContactPage() {
                     </p>
                     <div className="space-y-4 text-blancCasse">
                         <div className="flex items-center">
-                            <FaPhone  className="text-3xl text-blancCasse mr-4" />
+                            <FaPhone className="text-3xl text-blancCasse mr-4" />
                             <p className="text-lg font-medium">
                                 +261 038 00 000 00 ou +261 039 00 000 00
                             </p>
