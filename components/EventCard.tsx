@@ -20,12 +20,22 @@ export default function EventCard({
     description,
     imageUrl,
 }: EventCardProps) {
-    const { data: session } = useSession();
-
     const handleViewDetails = (e: React.MouseEvent) => {
-        if (!session) {
+        const user = localStorage.getItem("user");
+        if (!user) {
             e.preventDefault();
-            toast.error("Veuillez vous connecter pour voir les détails de l'événement.");
+            toast.error(
+                "Veuillez vous connecter pour voir les détails de l'événement.",
+                {
+                    duration: 3000,
+                    position: "top-center",
+                    style: {
+                        backgroundColor: "#f87171",
+                        color: "#fff",
+                    },
+                    icon: "🔒",
+                }
+            );
         }
     };
 
