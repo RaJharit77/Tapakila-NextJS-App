@@ -30,6 +30,9 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
         const userToUpdate = await prisma.user.findUnique({
             where: {
                 user_id: id
+            },
+            include: {
+                tickets : true
             }
         })
 
