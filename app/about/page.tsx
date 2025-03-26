@@ -7,8 +7,8 @@ import { useEffect } from "react";
 export default function AboutPage() {
     useEffect(() => {
         AOS.init({
-            duration: 1000, // Durée des animations
-            once: true, // Les animations ne se déclenchent qu'une fois
+            duration: 1000,
+            once: true,
         });
     }, []);
 
