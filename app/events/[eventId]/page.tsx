@@ -2,6 +2,8 @@
 
 import TicketTable from "@/components/TicketTable";
 import { useParams, useRouter } from "next/navigation";
+import Link from "next/link";
+import { toast } from "react-hot-toast";
 import { useEffect, useState } from "react";
 import { FaArrowLeft, FaTicketAlt } from "react-icons/fa";
 
@@ -37,6 +39,22 @@ export default function EventPage() {
         }
         fetchEvent();
     }, [eventId]);
+
+    const handleReservationClick = () => {
+        const user = localStorage.getItem("user");
+
+        if (!user) {
+            toast.error("Veuillez vous connecter ou créer un compte pour réserver", {
+                duration: 3000,
+                position: "top-center",
+                style: {
+                    backgroundColor: "#f87171",
+                    color: "#fff",
+                },
+                icon: "🔒",
+            });
+        }
+    };
 
     if (loading) {
         return (
@@ -117,12 +135,12 @@ export default function EventPage() {
                                 }))}
                             />
 
-                            <button
-                                className="mt-6 w-full bg-bleuElec text-blancCasse px-4 py-2 rounded-lg hover:bg-bleuNuit transition-colors flex items-center justify-center"
-                            >
+                            <Link
+                                onClick={handleReservationClick}
+                                className="mt-6 w-full bg-bleuElec text-blancCasse px-4 py-2 rounded-lg hover:bg-bleuNuit transition-colors flex items-center justify-center" href={""}                            >
                                 <FaTicketAlt className="mr-2" />
                                 Réserver
-                            </button>
+                            </Link>
                         </div>
                     </div>
                 </div>

@@ -5,7 +5,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { FaBars, FaSearch, FaSignOutAlt, FaTimes, FaUser } from "react-icons/fa";
-import { toast } from "react-hot-toast";
 
 export default function Navbar() {
     const [isScrolled, setIsScrolled] = useState(false);
@@ -50,13 +49,6 @@ export default function Navbar() {
         setIsLoggedIn(false);
         setUserName(null);
         router.push("/login");
-    };
-
-    const handleEventsClick = (e: React.MouseEvent<HTMLAnchorElement, MouseEvent>) => {
-        if (!isLoggedIn) {
-            e.preventDefault();
-            toast.error("Vous devez créer un compte pour voir les événements.");
-        }
     };
 
     return (
@@ -134,7 +126,7 @@ export default function Navbar() {
                             Accueil
                         </Link>
                         <Link
-                            href="/events" onClick={handleEventsClick}
+                            href="/events" 
                             className="text-blancGlacialNeutre hover:text-transparent hover:bg-clip-text hover:bg-gradient-to-r from-bleuElec to-orMetallique transition-all duration-300 hover-neon underline-uncurved"
                         >
                             Événements
@@ -206,7 +198,7 @@ export default function Navbar() {
                                 Accueil
                             </Link>
                             <Link
-                                href="/events" onClick={handleEventsClick}
+                                href="/events"
                                 className="text-blancGlacialNeutre hover:text-transparent hover:bg-clip-text hover:bg-gradient-to-r from-bleuElec to-orMetallique transition-all duration-300 hover-neon"
                             >
                                 Événements
