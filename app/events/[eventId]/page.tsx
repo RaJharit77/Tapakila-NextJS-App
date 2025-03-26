@@ -137,7 +137,8 @@ export default function EventPage() {
 
                             <Link
                                 onClick={handleReservationClick}
-                                className="mt-6 w-full bg-bleuElec text-blancCasse px-4 py-2 rounded-lg hover:bg-bleuNuit transition-colors flex items-center justify-center" href={""}                            >
+                                href={`/dashboard/reservations`}
+                                className="mt-6 w-full bg-bleuElec text-blancCasse px-4 py-2 rounded-lg hover:bg-bleuNuit transition-colors flex items-center justify-center"                            >
                                 <FaTicketAlt className="mr-2" />
                                 Réserver
                             </Link>
