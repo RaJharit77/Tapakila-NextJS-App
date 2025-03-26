@@ -2,7 +2,6 @@
 
 import EventCard from "@/components/EventCard";
 import { Slide } from "@mui/material";
-import Link from "next/link";
 import { toast } from "react-hot-toast";
 import { useEffect, useState } from "react";
 import "swiper/css";
@@ -27,6 +26,21 @@ export default function Home() {
   const [error, setError] = useState<string | null>(null);
   const [showContent, setShowContent] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  useEffect(() => {
+    const checkAuth = () => {
+      const user = localStorage.getItem("user");
+      setIsAuthenticated(!!user);
+    };
+
+    checkAuth();
+
+    window.addEventListener("storage", checkAuth);
+
+    return () => {
+      window.removeEventListener("storage", checkAuth);
+    };
+  }, []);
 
   useEffect(() => {
     async function fetchEvents() {
@@ -63,7 +77,18 @@ export default function Home() {
 
   const handleDiscoverClick = () => {
     if (!isAuthenticated) {
-      toast.error("Vous devez créer un compte pour accéder aux événements.");
+      toast.error(
+        "Vous devez créer un compte ou vous connecter pour accéder aux événements.",
+        {
+          duration: 3000,
+          position: "top-center",
+          style: {
+            backgroundColor: "#f87171",
+            color: "#fff",
+          },
+          icon: "🔒",
+        }
+      );
     } else {
       window.location.href = "/events";
     }
