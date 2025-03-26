@@ -2,6 +2,8 @@
 
 import TicketTable from "@/components/TicketTable";
 import { useParams, useRouter } from "next/navigation";
+import Link from "next/link";
+import { toast } from "react-hot-toast";
 import { useEffect, useState } from "react";
 import { FaArrowLeft, FaTicketAlt } from "react-icons/fa";
 
@@ -26,8 +28,44 @@ export default function EventPage({ params }: { params: { eventId: string } }) {
         fetchEvent();
     }, [eventId]);
 
-    if (!event) {
-        return <div className="text-center text-bleuNuit mt-8">Événement non trouvé</div>;
+    const handleReservationClick = () => {
+        const user = localStorage.getItem("user");
+
+        if (!user) {
+            toast.error("Veuillez vous connecter ou créer un compte pour réserver", {
+                duration: 3000,
+                position: "top-center",
+                style: {
+                    backgroundColor: "#f87171",
+                    color: "#fff",
+                },
+                icon: "🔒",
+            });
+        }
+    };
+
+    if (loading) {
+        return (
+            <div
+                className="min-h-screen flex items-center justify-center bg-cover bg-center"
+                style={{ backgroundImage: "url('/img/bgEventId.jpg')" }}
+            >
+                <div className="absolute inset-0 bg-black bg-opacity-70 pointer-events-none"></div>
+                <div className="relative z-10 text-center text-blancGlacialNeutre text-xl">Chargement...</div>
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div
+                className="min-h-screen flex items-center justify-center bg-cover bg-center"
+                style={{ backgroundImage: "url('/img/bgEventId.jpg')" }}
+            >
+                <div className="absolute inset-0 bg-black bg-opacity-70 pointer-events-none"></div>
+                <div className="relative z-10 text-center text-red-500 text-xl">{error}</div>
+            </div>
+        );
     }
 
     return (
@@ -87,15 +125,13 @@ export default function EventPage({ params }: { params: { eventId: string } }) {
                                 }))}
                             />
 
-                            <button
-                                onClick={() => {
-                                    alert("Fonctionnalité de réservation à implémenter !");
-                                }}
-                                className="mt-6 w-full bg-bleuElec text-blancCasse px-4 py-2 rounded-lg hover:bg-bleuNuit transition-colors flex items-center justify-center"
-                            >
+                            <Link
+                                onClick={handleReservationClick}
+                                href={`/dashboard/reservations`}
+                                className="mt-6 w-full bg-bleuElec text-blancCasse px-4 py-2 rounded-lg hover:bg-bleuNuit transition-colors flex items-center justify-center"                            >
                                 <FaTicketAlt className="mr-2" />
                                 Réserver
-                            </button>
+                            </Link>
                         </div>
                     </div>
                 </div>

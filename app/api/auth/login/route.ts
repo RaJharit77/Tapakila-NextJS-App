@@ -22,7 +22,6 @@ export async function POST(req: NextRequest) {
             user: {
                 name: user.user_name,
                 email: user.user_email,
-                /**date_joined: user.date_joined,*/
             },
             message: "Connexion réussie.",
         });

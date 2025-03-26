@@ -2,7 +2,7 @@
 
 import EventCard from "@/components/EventCard";
 import { Slide } from "@mui/material";
-import { toast } from "react-hot-toast";
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import "swiper/css";
 import "swiper/css/navigation";
@@ -25,22 +25,6 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showContent, setShowContent] = useState(false);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-
-  useEffect(() => {
-    const checkAuth = () => {
-      const user = localStorage.getItem("user");
-      setIsAuthenticated(!!user);
-    };
-
-    checkAuth();
-
-    window.addEventListener("storage", checkAuth);
-
-    return () => {
-      window.removeEventListener("storage", checkAuth);
-    };
-  }, []);
 
   useEffect(() => {
     async function fetchEvents() {
@@ -75,25 +59,6 @@ export default function Home() {
     fetchEvents();
   }, []);
 
-  const handleDiscoverClick = () => {
-    if (!isAuthenticated) {
-      toast.error(
-        "Vous devez créer un compte ou vous connecter pour accéder aux événements.",
-        {
-          duration: 3000,
-          position: "top-center",
-          style: {
-            backgroundColor: "#f87171",
-            color: "#fff",
-          },
-          icon: "🔒",
-        }
-      );
-    } else {
-      window.location.href = "/events";
-    }
-  };
-
   const currentDate = new Date();
 
   const upcomingEvents = events.filter((event) => new Date(event.date) >= currentDate);
@@ -124,12 +89,12 @@ export default function Home() {
                 <p className="text-xl mb-8">
                   Découvrez et réservez vos billets <br />pour les meilleurs événements de votre vie.
                 </p>
-                <button
-                  onClick={handleDiscoverClick}
+                <Link
+                  href="/events"
                   className="bg-bleuElec text-blancGlacialNeutre px-6 py-3 rounded-lg text-lg hover:bg-bleuNuit hover:text-orMetallique transition-colors"
                 >
                   Découvrir Maintenant
-                </button>
+                </Link>
               </div>
             </Slide>
           )}
