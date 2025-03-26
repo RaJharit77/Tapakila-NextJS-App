@@ -10,7 +10,8 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
                 ticket_id: id
             },
             include: {
-                user: true
+                user: true,
+                event: true
             }
         })
 
