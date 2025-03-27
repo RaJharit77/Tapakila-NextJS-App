@@ -4,7 +4,7 @@ import { NextResponse } from "next/server";
 export async function GET(request: Request, { params }: { params: { eventId: string } }) {
     const { eventId } = params;
     if (!eventId) {
-        return new Response(JSON.stringify({ error: "Event ID is required" }), {
+        return new NextResponse(JSON.stringify({ error: "Event ID is required" }), {
             status: 400,
             headers: { 'Content-Type': 'application/json' },
         });
@@ -41,6 +41,17 @@ export async function GET(request: Request, { params }: { params: { eventId: str
         await prisma.$disconnect();
     }
 }
+
+
+
+
+
+
+
+
+
+
+
 
 export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
     console.log(request);
