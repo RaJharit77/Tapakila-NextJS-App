@@ -32,7 +32,7 @@ describe('template spec', () => {
     });
   })
 
-  it.only("Devrait créer un message avec succès", () => {
+  it("Devrait créer un message avec succès", () => {
     cy.request({
       method: "POST",
       url: "http://localhost:3000/api/contact",
@@ -56,9 +56,61 @@ describe('template spec', () => {
       expect(getResponse.body).to.have.property("message_id", "M64fe8dfc724c4b3fb710b1998deb22b3");
       expect(getResponse.body).to.have.property("message_subject", "Problème technique");
       expect(getResponse.body).to.have.property("message_content", "J'ai un problème avec l'application.");
-      expect(getResponse.body).to.have.property("user"); // Vérifie que l'utilisateur est inclus
+      expect(getResponse.body).to.have.property("user"); 
+    });
+
+  });
+
+  it("Devrait récupérer la liste des événements", () => {
+    cy.request({
+      method: "GET",
+      url: "http://localhost:3000/api/events",
+    }).then((response) => {
+      expect(response.status).to.eq(200);
+      expect(response.body).to.be.an("array");
     });
   });
+
+  it("Devrait créer un événement avec succès", () => {
+    cy.request({
+      method: "POST",
+      url: "http://localhost:3000/api/events",
+      body: {
+        event_name: "Conférence Tech",
+        event_place: "Centre des Congrès",
+        event_category: "Conférence",
+        event_date: "2025-04-15T10:00:00Z",
+        event_description: "Une conférence sur les dernières avancées en IA.",
+        event_organizer: "Tech Group",
+        event_id: "E008",
+        event_image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQNH1CAaIgi-XGu5v_TVT8sSAGlKlN0pvQgKQ&s",
+        admin_id: "A001",
+      },
+    }).then((response) => {
+      expect(response.status).to.eq(201);
+      expect(response.body).to.have.property("event_name", "Conférence Tech");
+      expect(response.body).to.have.property("event_place", "Centre des Congrès");
+      expect(response.body).to.have.property("event_category", "Conférence");
+    });
+  });
+
+  it.only("Devrait récupérer un événement par ID", () => {
+    cy.request({
+      method: "GET",
+      url: "http://localhost:3000/api/events/E008", // Assure-toi que cet ID existe en base
+    }).then((response) => {
+      expect(response.status).to.eq(200); // Correction : 200 au lieu de 201
+      expect(response.body).to.have.property("event_name", "Conférence Tech");
+      expect(response.body).to.have.property("event_place", "Centre des Congrès");
+      expect(response.body).to.have.property("event_category", "Conférence");
+      expect(response.body).to.have.property("event_description", "Une conférence sur les dernières avancées en IA.");
+      expect(response.body).to.have.property("event_organizer", "Tech Group");
+      expect(response.body).to.have.property("event_id", "E008"); // Vérifier que c'est bien le bon ID
+      expect(response.body).to.have.property("event_image", "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQNH1CAaIgi-XGu5v_TVT8sSAGlKlN0pvQgKQ&s");
+      expect(response.body).to.have.property("admin_id", "A001");
+    });
+  });
+  
 
 
 });
