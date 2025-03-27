@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE "Ticket" ADD COLUMN     "ticket_creation_date" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP;
