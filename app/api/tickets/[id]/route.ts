@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma"
+import { NextResponse } from "next/server"
 
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
 
@@ -15,11 +16,11 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
             }
         })
 
-        return new Response(JSON.stringify(ticket), { status: 200, headers: { 'Content-Type': 'application/json' } })
+        return new NextResponse(JSON.stringify(ticket), { status: 200, headers: { 'Content-Type': 'application/json' } })
     }
     catch (error) {
         console.error("error fetching datas", error)
-        return new Response(JSON.stringify({ error: "Repository Error" }), { status: 500 })
+        return new NextResponse(JSON.stringify({ error: "Repository Error" }), { status: 500 })
 
     }
     finally {

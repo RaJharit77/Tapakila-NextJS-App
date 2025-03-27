@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { Status, Type } from "@prisma/client";
+import { NextResponse } from "next/server";
 
 export async function GET(request: Request) {
   try {
@@ -17,7 +18,7 @@ export async function GET(request: Request) {
         },
       });
 
-      return Response.json({ tickets }, { status: 200 });
+      return NextResponse.json({ tickets }, { status: 200 });
     } else {
       const ticketCount = await prisma.ticket.count({
         where: {
@@ -25,11 +26,11 @@ export async function GET(request: Request) {
         }
       });
 
-      return Response.json({ count: ticketCount }, { status: 200 });
+      return NextResponse.json({ count: ticketCount }, { status: 200 });
     }
   } catch (error) {
     console.error('Error fetching data:', error);
-    return Response.json(
+    return NextResponse.json(
       { error: 'Repository Error' },
       { status: 500 }
     );
@@ -58,11 +59,11 @@ export async function DELETE(request: Request) {
       }
     })
 
-    return new Response(JSON.stringify(deleteTickets), { status: 200 });
+    return new NextResponse(JSON.stringify(deleteTickets), { status: 200 });
 
   } catch (e) {
     console.error("Error while deleting the ticket", e)
-    return new Response(JSON.stringify({ error: "Repository error" }),
+    return new NextResponse(JSON.stringify({ error: "Repository error" }),
       { status: 500 }
     );
 
@@ -100,11 +101,11 @@ export async function POST(request: Request) {
       })
     }
 
-    return new Response(JSON.stringify({ created: created }), { status: 201 })
+    return new NextResponse(JSON.stringify({ created: created }), { status: 201 })
 
   } catch (e) {
     console.error("Error while creating the ticket", e)
-    return new Response(JSON.stringify({ error: "Repository erro" }),
+    return new NextResponse(JSON.stringify({ error: "Repository erro" }),
       { status: 500 }
     )
   } finally {

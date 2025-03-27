@@ -1,5 +1,7 @@
 import { prisma } from "@/lib/prisma"
 
+import { NextResponse } from "next/server"
+
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
     try {
         const { id } = await params
@@ -11,11 +13,11 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
                 tickets: true
             }
         })
-        return new Response(JSON.stringify(user), { status: 200, headers: { 'Content-Type': 'application/json' } })
+        return new NextResponse(JSON.stringify(user), { status: 200, headers: { 'Content-Type': 'application/json' } })
     }
     catch (e) {
         console.error("Error finding the user ", e)
-        return new Response(JSON.stringify({ error: "Repository erro" }),
+        return new NextResponse(JSON.stringify({ error: "Repository erro" }),
             { status: 500 }
         )
     } finally {
@@ -37,7 +39,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
         })
 
         if (userToUpdate == null) {
-            return new Response(JSON.stringify({ error: "User not found" }), { status: 404 })
+            return new NextResponse(JSON.stringify({ error: "User not found" }), { status: 404 })
         }
         else {
             const updatedUser = await prisma.user.update({
@@ -48,11 +50,11 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
 
             })
 
-            return new Response(JSON.stringify(updatedUser), { status: 200 })
+            return new NextResponse(JSON.stringify(updatedUser), { status: 200 })
         }
     } catch (e) {
         console.error("Error while deleting the user", e)
-        return new Response(JSON.stringify({ error: "Repository error" }),
+        return new NextResponse(JSON.stringify({ error: "Repository error" }),
             { status: 500 }
         )
 
@@ -74,7 +76,7 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
         })
 
         if (userToDelete == null) {
-            return new Response(JSON.stringify({ error: "User not found" }), { status: 404 })
+            return new NextResponse(JSON.stringify({ error: "User not found" }), { status: 404 })
         }
         else {
             const userDeleted = await prisma.user.delete({
@@ -83,11 +85,11 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
                 }
             })
 
-            return new Response(JSON.stringify(userDeleted), { status: 200 })
+            return new NextResponse(JSON.stringify(userDeleted), { status: 200 })
         }
     } catch (e) {
         console.error("Error while deleting the user", e)
-        return new Response(JSON.stringify({ error: "Repository error" }),
+        return new NextResponse(JSON.stringify({ error: "Repository error" }),
             { status: 500 }
         )
 
