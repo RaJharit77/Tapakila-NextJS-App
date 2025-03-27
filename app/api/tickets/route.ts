@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { Status, Type } from "@prisma/client";
+import { NextResponse } from "next/server";
 
 export async function GET(request: Request) {
   try {
@@ -17,7 +18,7 @@ export async function GET(request: Request) {
         },
       });
 
-      return Response.json({ tickets }, { status: 200 });
+      return NextResponse.json({ tickets }, { status: 200 });
     } else {
       const ticketCount = await prisma.ticket.count({
         where: {
@@ -25,11 +26,11 @@ export async function GET(request: Request) {
         }
       });
 
-      return Response.json({ count: ticketCount }, { status: 200 });
+      return NextResponse.json({ count: ticketCount }, { status: 200 });
     }
   } catch (error) {
     console.error('Error fetching data:', error);
-    return Response.json(
+    return NextResponse.json(
       { error: 'Repository Error' },
       { status: 500 }
     );
@@ -58,11 +59,11 @@ export async function DELETE(request: Request) {
       }
     })
 
-    return new Response(JSON.stringify(deleteTickets), { status: 200 });
+    return new NextResponse(JSON.stringify(deleteTickets), { status: 200 });
 
   } catch (e) {
     console.error("Error while deleting the ticket", e)
-    return new Response(JSON.stringify({ error: "Repository error" }),
+    return new NextResponse(JSON.stringify({ error: "Repository error" }),
       { status: 500 }
     );
 
@@ -73,41 +74,58 @@ export async function DELETE(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const { ticketNumber, idEvent, ticket_type, ticketPrice } = await request.json()
+    const { ticketNumber, idEvent, ticket_type, ticketPrice } = await request.json();
 
-    const lastTicket = await prisma.ticket.findFirst({
-      orderBy: {
-        ticket_id: "desc"
-      }
-    })
-    let created = 0
-    let lastId = lastTicket && lastTicket.ticket_id && lastTicket.event_id
-      ? parseInt(lastTicket.ticket_id.split(lastTicket.event_id + "TKT").join(""))
-      : 0;
-
-    for (let i = 0; i < ticketNumber; i++) {
-      lastId += 1
-      created += 1
-
-      await prisma.ticket.create({
-        data: {
-          ticket_id: idEvent + "TKT" + lastId,
-          ticket_status: "AVAILABLE",
-          event_id: idEvent,
-          ticket_type: ticket_type,
-          ticket_price: ticketPrice
-        }
-      })
+    if (!ticketNumber || !idEvent || !ticket_type || ticketPrice === undefined) {
+      return new NextResponse(JSON.stringify({ error: "Champs requis manquants" }), { 
+        status: 400 
+      });
     }
 
-    return new Response(JSON.stringify({ created: created }), { status: 201 })
+    const lastTicket = await prisma.ticket.findFirst({
+      where: {
+        event_id: idEvent,
+        ticket_id: { startsWith: idEvent + "TKT" }
+      },
+      orderBy: { ticket_creation_date: "desc" },
+      select: { ticket_id: true }
+    });
+
+    const lastId = lastTicket 
+      ? parseInt(lastTicket.ticket_id.split(idEvent + "TKT")[1] || "0")
+      : 0;
+
+    const ticketsToCreate = [];
+    for (let i = 1; i <= ticketNumber; i++) {
+      ticketsToCreate.push({
+        ticket_id: `${idEvent}TKT${lastId + i}`,
+        ticket_status: "AVAILABLE" as Status,
+        event_id: idEvent,
+        ticket_type,
+        ticket_price: ticketPrice,
+        ticket_creation_date: new Date(),
+      });
+    }
+
+    const result = await prisma.ticket.createMany({
+      data: ticketsToCreate,
+      skipDuplicates: true,
+    });
+
+    return new NextResponse(JSON.stringify({ 
+      created: result.count 
+    }), { 
+      status: 201 
+    });
 
   } catch (e) {
-    console.error("Error while creating the ticket", e)
-    return new Response(JSON.stringify({ error: "Repository erro" }),
-      { status: 500 }
-    )
+    console.error("Erreur lors de la création des tickets:", e);
+    return new NextResponse(JSON.stringify({ 
+      error: "Repository error",
+    }), { 
+      status: 500 
+    });
   } finally {
-    await prisma.$disconnect()
+    await prisma.$disconnect();
   }
 }

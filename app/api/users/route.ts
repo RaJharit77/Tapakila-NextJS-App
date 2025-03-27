@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { randomUUID } from "crypto";
+import { NextResponse } from "next/server";
 
 export async function GET(request: Request) {
     try {
@@ -17,12 +18,12 @@ export async function GET(request: Request) {
             }
         });
 
-        return new Response(JSON.stringify(users), { status: 200, headers: { "Content-Type": "application/json" } })
+        return new NextResponse(JSON.stringify(users), { status: 200, headers: { "Content-Type": "application/json" } })
     }
 
     catch (error) {
         console.error("Error while fetching data", error)
-        return new Response(JSON.stringify({ error: "Repository error" }),
+        return new NextResponse(JSON.stringify({ error: "Repository error" }),
             { status: 500 }
         )
     } finally {
@@ -35,7 +36,7 @@ export async function POST(request: Request) {
         const body = await request.json();
         const { user_name, user_email, user_password, ...rest } = body;
         if (!user_name || !user_email || !user_password) {
-            return new Response(JSON.stringify({ error: "Missing required fields" }), { status: 400 });
+            return new NextResponse(JSON.stringify({ error: "Missing required fields" }), { status: 400 });
         }
 
         const number = "USR" + randomUUID().split("-")[0]
@@ -51,11 +52,11 @@ export async function POST(request: Request) {
                 ...rest
             }
         });
-        return new Response(JSON.stringify(newUser), { status: 201 });
+        return new NextResponse(JSON.stringify(newUser), { status: 201 });
 
     } catch (error) {
         console.error("Error while creating the event", error)
-        return new Response(JSON.stringify({ error: "Repository erro" }),
+        return new NextResponse(JSON.stringify({ error: "Repository erro" }),
             { status: 500 }
         )
     } finally {
