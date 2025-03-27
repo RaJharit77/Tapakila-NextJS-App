@@ -47,6 +47,20 @@ describe('template spec', () => {
       expect(response.body).to.have.property("message_subject", "Problème technique");
       expect(response.body).to.have.property("message_content", "J'ai un problème avec l'application.");
     });
+
+    cy.request({
+      method: "GET",
+      url: "http://localhost:3000/api/contact/M64fe8dfc724c4b3fb710b1998deb22b3",
+    }).then((getResponse) => {
+      expect(getResponse.status).to.eq(200);
+      expect(getResponse.body).to.have.property("message_id", "M64fe8dfc724c4b3fb710b1998deb22b3");
+      expect(getResponse.body).to.have.property("message_subject", "Problème technique");
+      expect(getResponse.body).to.have.property("message_content", "J'ai un problème avec l'application.");
+      expect(getResponse.body).to.have.property("user"); // Vérifie que l'utilisateur est inclus
+    });
   });
 
-})
+
+});
+
+
