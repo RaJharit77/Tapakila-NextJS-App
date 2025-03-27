@@ -5,6 +5,7 @@ import { Analytics } from '@vercel/analytics/next';
 import { Poppins } from "next/font/google";
 import { ReactNode } from "react";
 import { ToastContainer } from "react-toastify";
+import { ToastProvider } from "@/components/ToastProvider";
 import "react-toastify/dist/ReactToastify.css";
 import { Toaster } from 'react-hot-toast';
 import { SessionProvider } from "next-auth/react";
@@ -32,6 +33,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
               {children}
               <ToastContainer />
               <Toaster />
+              <ToastProvider />
               <Analytics />
             </main>
             <Footer />

@@ -6,6 +6,9 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
         const user = await prisma.user.findUnique({
             where: {
                 user_id: id
+            },
+            include:{
+                tickets: true
             }
         })
         return new Response(JSON.stringify(user), { status: 200, headers: { 'Content-Type': 'application/json' } })
@@ -31,6 +34,9 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
         const userToUpdate = await prisma.user.findUnique({
             where: {
                 user_id: id
+            },
+            include: {
+                tickets : true
             }
         })
 
