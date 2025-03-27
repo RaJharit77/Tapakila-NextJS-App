@@ -18,8 +18,7 @@ export const metadata = {
   title: "Tapakila App",
   icons: {
     icon: "/assets/favicon.png",
-  },
-  type: "image/svg+xml",
+  }
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
