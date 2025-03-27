@@ -27,11 +27,11 @@ export async function POST(request: Request) {
             },
         })
 
-        return Response.json(content, { status: 201 });
+        return NextResponse.json(content, { status: 201 });
 
     } catch (error) {
         console.error('Error while sending the review:', error);
-        return Response.json({ error: 'Erreur serveur.' }, { status: 500 });
+        return NextResponse.json({ error: 'Erreur serveur.' }, { status: 500 });
     } finally {
         await prisma.$disconnect()
     }
@@ -53,10 +53,10 @@ export async function GET(request: Request) {
             }
         });
 
-        return Response.json(messages, { status: 200 });
+        return NextResponse.json(messages, { status: 200 });
     } catch (error) {
         console.error('Error while fetching the messages:', error);
-        return Response.json({ error: 'Erreur serveur.' }, { status: 500 });
+        return NextResponse.json({ error: 'Erreur serveur.' }, { status: 500 });
     } finally {
         await prisma.$disconnect()
     }
