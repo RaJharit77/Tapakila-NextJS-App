@@ -23,15 +23,39 @@ function SignupPage() {
                 body: JSON.stringify({ name, email, password }),
             });
 
+           
             if (!res.ok) {
                 const data = await res.json();
                 setErrorMessage(data.message || "Erreur lors de l'inscription.");
                 return;
             }
+            // window.location.href = "/login";
 
-            window.location.href = "/login";
+
         } catch {
             setErrorMessage("Erreur lors de l'inscription. Veuillez réessayer.");
+        }
+
+        try {
+            const res = await fetch("/api/auth/login", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ email, password }),
+            });
+
+            if (!res.ok) {
+                const data = await res.json();
+                setErrorMessage(data.message || "Erreur lors de la connexion");
+                return;
+            }
+
+            const data = await res.json();
+            localStorage.setItem("user", JSON.stringify(data.user));
+            window.location.href = "/dashboard/profile";
+        } catch {
+            setErrorMessage("Erreur lors de la connexion");
         }
     };
 
