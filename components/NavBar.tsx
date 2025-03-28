@@ -14,6 +14,7 @@ export default function Navbar() {
     const [isSearchOpen, setIsSearchOpen] = useState(false);
     const [isLoggedIn, setIsLoggedIn] = useState(false);
     const [userName, setUserName] = useState<string | null>(null);
+    const [searchType, setSearchType] = useState<"name" | "location" | "date">("name");
     const router = useRouter();
 
     useEffect(() => {
@@ -40,7 +41,7 @@ export default function Navbar() {
     const handleSearchSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (searchValue.trim()) {
-            router.push(`/events?search=${encodeURIComponent(searchValue)}`);
+            router.push(`/events?${searchType}=${encodeURIComponent(searchValue)}`);
         }
     };
 
@@ -83,10 +84,21 @@ export default function Navbar() {
                     <form
                         onSubmit={handleSearchSubmit}
                         className={`hidden lg:flex items-center bg-blancGlacialNeutre text-bleuNuit rounded-xl px-3 py-2 w-1/3 transition-all duration-300 ${isSearchFocused || searchValue
-                            ? "shadow-neon-orMetallique"
+                            ? "shadow-neon-orMetallique w-1/3"
                             : ""
                             }`}
                     >
+                        {(isSearchFocused || searchValue) && (
+                            <select
+                                value={searchType}
+                                onChange={(e) => setSearchType(e.target.value as "name" | "location" | "date")}
+                                className="bg-blancGlacialNeutre text-gray-500 rounded-l-lg px-2 py-1 text-sm focus:outline-none border-r border-gray-300 mr-1"
+                            >
+                                <option value="name">Nom</option>
+                                <option value="location">Lieu</option>
+                                <option value="date">Date</option>
+                            </select>
+                        )}
                         <FaSearch className="text-gray-500" />
                         <input
                             type="text"
@@ -169,21 +181,36 @@ export default function Navbar() {
                     <div className="lg:hidden mt-4 transition-all duration-300">
                         <form
                             onSubmit={handleSearchSubmit}
-                            className={`flex items-center bg-blancGlacialNeutre text-bleuNuit rounded-xl px-3 py-2 ${isSearchFocused || searchValue
+                            className={`flex flex-col gap-2 bg-blancGlacialNeutre text-bleuNuit rounded-xl p-3 ${isSearchFocused || searchValue
                                 ? "shadow-neon-orMetallique"
                                 : ""
                                 }`}
                         >
-                            <FaSearch className="text-gray-500" />
-                            <input
-                                type="text"
-                                placeholder="Rechercher des événements..."
-                                className="ml-2 bg-transparent outline-none w-full"
-                                onFocus={() => setIsSearchFocused(true)}
-                                onBlur={() => setIsSearchFocused(false)}
-                                onChange={(e) => setSearchValue(e.target.value)}
-                                value={searchValue}
-                            />
+                            <select
+                                value={searchType}
+                                onChange={(e) => setSearchType(e.target.value as "name" | "location" | "date")}
+                                className="bg-bleuNuit text-blancGlacialNeutre rounded-lg px-2 py-1 text-sm focus:outline-none"
+                            >
+                                <option value="name">Nom</option>
+                                <option value="location">Lieu</option>
+                                <option value="date">Date</option>
+                            </select>
+                            <div className="flex items-center">
+                                <FaSearch className="text-gray-500" />
+                                <input
+                                    type="text"
+                                    placeholder={
+                                        searchType === "name" ? "Rechercher par nom..." :
+                                        searchType === "location" ? "Rechercher par lieu..." :
+                                        "Rechercher par date (JJ/MM/AAAA)..."
+                                    }
+                                    className="ml-2 bg-transparent outline-none w-full"
+                                    onFocus={() => setIsSearchFocused(true)}
+                                    onBlur={() => setIsSearchFocused(false)}
+                                    onChange={(e) => setSearchValue(e.target.value)}
+                                    value={searchValue}
+                                />
+                            </div>
                         </form>
                     </div>
                 )}

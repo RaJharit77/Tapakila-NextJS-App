@@ -9,7 +9,6 @@ export async function POST(req: Request) {
     try {
         const { name, email, password } = await req.json();
 
-        // Validation des données
         if (!name || !email || !password) {
             return NextResponse.json(
                 { message: "Tous les champs sont requis." },
@@ -17,7 +16,6 @@ export async function POST(req: Request) {
             );
         }
 
-        // Vérifier si l'utilisateur existe déjà
         const existingUser = await prisma.user.findUnique({
             where: { user_email: email },
         });
@@ -42,8 +40,6 @@ export async function POST(req: Request) {
                 /*user_first_login_date: new Date(),*/
             },
         });
-
-        
 
         const { user_password, ...userWithoutPassword } = user;
 
