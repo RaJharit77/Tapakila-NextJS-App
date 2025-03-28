@@ -27,3 +27,39 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
         prisma.$disconnect()
     }
 }
+
+
+export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
+    try{
+        const body = await request.json()
+        const { id } = await params
+        const ticketToUpdate = await prisma.ticket.findUnique({
+            where: {
+                ticket_id: id
+            }
+        })
+
+        if (ticketToUpdate == null) {
+            return new NextResponse(JSON.stringify({ error: "Ticket not found" }), { status: 404 })
+        }
+        else {
+            const updatedTicket = await prisma.ticket.update({
+                where: {
+                    ticket_id: ticketToUpdate.ticket_id
+                },
+                data: body
+
+            })
+
+            return new NextResponse(JSON.stringify(updatedTicket), { status: 200 })
+        }
+    } catch (error) {
+        console.error("Error while updating the ticket", error)
+        return new NextResponse(JSON.stringify({ error: "Repository error" }),
+            { status: 500 }
+        )
+    }
+    finally {
+        await prisma.$disconnect()
+    }
+}
