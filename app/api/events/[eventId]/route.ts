@@ -1,7 +1,20 @@
 import { prisma } from "@/lib/prisma";
+import { NextResponse } from "next/server";
 
+<<<<<<< HEAD
 export async function GET(request: Request, { params }: { params: { id: string } }) {
     const { id } = params;
+=======
+export async function GET(request: Request, { params }: { params: { eventId: string } }) {
+    const { eventId } = params;
+    if (!eventId) {
+        return new NextResponse(JSON.stringify({ error: "Event ID is required" }), {
+            status: 400,
+            headers: { 'Content-Type': 'application/json' },
+        });
+    }
+
+>>>>>>> d6a4cfd8ee0ccf60661f10fa72ea4081d0d57f92
     try {
         const event = await prisma.event.findUnique({
             where: {
@@ -13,19 +26,19 @@ export async function GET(request: Request, { params }: { params: { id: string }
         });
 
         if (!event) {
-            return new Response(JSON.stringify({ error: "Event not found" }), {
+            return new NextResponse(JSON.stringify({ error: "Event not found" }), {
                 status: 404,
                 headers: { 'Content-Type': 'application/json' },
             });
         }
 
-        return new Response(JSON.stringify(event), {
+        return new NextResponse(JSON.stringify(event), {
             status: 200,
             headers: { 'Content-Type': 'application/json' },
         });
     } catch (error) {
         console.error("Error fetching event:", error);
-        return new Response(JSON.stringify({ error: "Failed to fetch event" }), {
+        return new NextResponse(JSON.stringify({ error: "Failed to fetch event" }), {
             status: 500,
             headers: { 'Content-Type': 'application/json' },
         });
@@ -33,6 +46,17 @@ export async function GET(request: Request, { params }: { params: { id: string }
         await prisma.$disconnect();
     }
 }
+
+
+
+
+
+
+
+
+
+
+
 
 export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
     console.log(request);
@@ -54,7 +78,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
                 data: body
             })
 
-            return new Response(JSON.stringify(updateEv), { status: 200 })
+            return new NextResponse(JSON.stringify(updateEv), { status: 200 })
 
         }
         else {
@@ -62,13 +86,13 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
                 data: body
             })
 
-            return new Response(JSON.stringify(createEv), {
+            return new NextResponse(JSON.stringify(createEv), {
                 status: 201
             })
         }
     } catch (error) {
         console.error("Error while creating the event", error)
-        return new Response(JSON.stringify({ error: "Repository erro" }),
+        return new NextResponse(JSON.stringify({ error: "Repository erro" }),
             { status: 500 }
         )
     }
@@ -93,18 +117,18 @@ export async function DELETE(params: string) {
         })
 
         if (verify == null) {
-            return Response.json(
+            return NextResponse.json(
                 { error: "that event doesn't exist" },
                 { status: 500 }
             )
         } else {
-            return new Response(JSON.stringify(event), { status: 200, headers: { 'Content-Type': 'application/json' } })
+            return new NextResponse(JSON.stringify(event), { status: 200, headers: { 'Content-Type': 'application/json' } })
         }
 
     }
     catch (error) {
         console.error("error fetching datas", error)
-        return new Response(JSON.stringify({ error: "Repository Error" }), { status: 500 })
+        return new NextResponse(JSON.stringify({ error: "Repository Error" }), { status: 500 })
 
     }
     finally {
