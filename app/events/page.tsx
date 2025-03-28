@@ -8,12 +8,23 @@ import { useEffect } from "react";
 export default function EventsPage() {
     const { events, setEvents } = useEventStore();
     const searchParams = useSearchParams();
-    const searchQuery = searchParams.get("search") || "";
+    const nameQuery = searchParams.get("name") || "";
+    const locationQuery = searchParams.get("location") || "";
+    const dateQuery = searchParams.get("date") || "";
 
     useEffect(() => {
         async function fetchEvents() {
             try {
-                const response = await fetch("/api/events");
+                let url = "/api/events";
+                if (nameQuery) {
+                    url += `?name=${encodeURIComponent(nameQuery)}`;
+                } else if (locationQuery) {
+                    url += `?location=${encodeURIComponent(locationQuery)}`;
+                } else if (dateQuery) {
+                    url += `?date=${encodeURIComponent(dateQuery)}`;
+                }
+
+                const response = await fetch(url);
                 if (!response.ok) {
                     throw new Error("Erreur lors du chargement des événements");
                 }
@@ -33,13 +44,9 @@ export default function EventsPage() {
             }
         }
         fetchEvents();
-    }, [setEvents]);
+    }, [setEvents, nameQuery, locationQuery, dateQuery]);
 
-    const filteredEvents = events.filter((event: { name: string; }) =>
-        event.name.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-
-    const eventsByCategory = filteredEvents.reduce((acc: Record<string, any[]>, event: any) => {
+    const eventsByCategory = events.reduce((acc: Record<string, any[]>, event: any) => {
         if (!acc[event.category]) {
             acc[event.category] = [];
         }
@@ -59,26 +66,32 @@ export default function EventsPage() {
                 <h1 className="text-4xl font-bold text-bleuNuit text-center mb-8">
                     Événements
                 </h1>
-                {Object.entries(eventsByCategory).map(([category, events]) => (
-                    <section key={category} className="mb-12">
-                        <h2 className="text-3xl font-bold text-bleuNuit mb-6">
-                            {category}
-                        </h2>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                            {(events as any[]).map((event: any) => (
-                                <EventCard
-                                    key={event.id}
-                                    id={event.id}
-                                    name={event.name}
-                                    date={event.date}
-                                    location={event.location}
-                                    description={event.description}
-                                    imageUrl={event.imageUrl}
-                                />
-                            ))}
-                        </div>
-                    </section>
-                ))}
+                {Object.entries(eventsByCategory).length > 0 ? (
+                    Object.entries(eventsByCategory).map(([category, events]) => (
+                        <section key={category} className="mb-12">
+                            <h2 className="text-3xl font-bold text-bleuNuit mb-6">
+                                {category}
+                            </h2>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                                {(events as any[]).map((event: any) => (
+                                    <EventCard
+                                        key={event.id}
+                                        id={event.id}
+                                        name={event.name}
+                                        date={event.date}
+                                        location={event.location}
+                                        description={event.description}
+                                        imageUrl={event.imageUrl}
+                                    />
+                                ))}
+                            </div>
+                        </section>
+                    ))
+                ) : (
+                    <div className="text-center text-blancGlacialNeutre text-xl">
+                        Aucun événement trouvé pour votre recherche.
+                    </div>
+                )}
             </div>
         </div>
     );

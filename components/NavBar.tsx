@@ -40,9 +40,20 @@ export default function Navbar() {
 
     const handleSearchSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        if (searchValue.trim()) {
+    if (searchValue.trim()) {
+        if (searchType === "date") {
+            const dateRegex = /^\d{2}\/\d{2}\/\d{4}$/;
+            if (!dateRegex.test(searchValue)) {
+                alert("Veuillez entrer une date au format JJ/MM/AAAA");
+                return;
+            }
+            const [day, month, year] = searchValue.split('/');
+            const formattedDate = `${year}-${month}-${day}`;
+            router.push(`/events?date=${formattedDate}`);
+        } else {
             router.push(`/events?${searchType}=${encodeURIComponent(searchValue)}`);
         }
+    }
     };
 
     const handleLogout = () => {
