@@ -5,29 +5,34 @@ import { NextResponse } from "next/server";
 export async function GET(request: Request) {
   try {
     const url = new URL(request.url);
-    const id = url.searchParams.get('id');
     const status = url.searchParams.get('status');
     const type = url.searchParams.get('type');
+    const idEvent = url.searchParams.get('idEvent');
 
-    if (id || status || type) {
+    const ticketsNumber = await prisma.ticket.count({
+      where:{
+        ticket_status: "SOLD" as Status
+      }
+    })
+
+    if(status || type || idEvent){
       const tickets = await prisma.ticket.findMany({
         where: {
-          event_id: String(id),
-          ticket_status: status ? (status as Status) : undefined,
-          ticket_type: type ? (type as Type) : undefined,
-        },
-      });
+          ...(status && { ticket_status: status as Status }),
+          ...(type && { ticket_type: type as Type }),
+          ...(idEvent && { event_id: idEvent })
+        }
+      })
 
       return NextResponse.json({ tickets }, { status: 200 });
-    } else {
-      const ticketCount = await prisma.ticket.count({
-        where: {
-          ticket_status: "SOLD",
-        }
-      });
-
-      return NextResponse.json({ count: ticketCount }, { status: 200 });
     }
+  
+
+
+
+    return NextResponse.json({ ticketsNumber }, { status: 200 });
+    
+
   } catch (error) {
     console.error('Error fetching data:', error);
     return NextResponse.json(

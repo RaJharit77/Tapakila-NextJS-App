@@ -32,7 +32,6 @@ export async function POST(request: Request) {
       { expiresIn: "1h" }
     );
 
-    // Renvoyer une réponse réussie
     return NextResponse.json(
       { accessToken, redirectTo: '/' },
       { status: 200 }

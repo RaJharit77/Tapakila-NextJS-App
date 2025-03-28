@@ -2,7 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 
 export async function GET(request: Request, { params }: { params: { eventId: string } }) {
-    const { eventId } = params;
+    const { eventId } = await params;
     if (!eventId) {
         return new NextResponse(JSON.stringify({ error: "Event ID is required" }), {
             status: 400,
@@ -42,33 +42,22 @@ export async function GET(request: Request, { params }: { params: { eventId: str
     }
 }
 
-
-
-
-
-
-
-
-
-
-
-
-export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function PUT(request: Request, { params }: { params: { eventId: string } }) {
     console.log(request);
     try {
-        const { id } = await params
+        const { eventId } = await params
         const body = await request.json()
 
         const event = await prisma.event.findUnique({
             where: {
-                event_id: id
+                event_id: eventId
             }
         })
 
         if (event != null) {
             const updateEv = await prisma.event.update({
                 where: {
-                    event_id: id,
+                    event_id: eventId,
                 },
                 data: body
             })
