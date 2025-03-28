@@ -84,25 +84,29 @@ export default function Navbar() {
                     <form
                         onSubmit={handleSearchSubmit}
                         className={`hidden lg:flex items-center bg-blancGlacialNeutre text-bleuNuit rounded-xl px-3 py-2 w-1/3 transition-all duration-300 ${isSearchFocused || searchValue
-                            ? "shadow-neon-orMetallique w-1/3"
+                            ? "shadow-neon-orMetallique"
                             : ""
                             }`}
                     >
-                        {(isSearchFocused || searchValue) && (
+                        <div className="relative">
                             <select
                                 value={searchType}
                                 onChange={(e) => setSearchType(e.target.value as "name" | "location" | "date")}
-                                className="bg-blancGlacialNeutre text-gray-500 rounded-l-lg px-2 py-1 text-sm focus:outline-none border-r border-gray-300 mr-1"
+                                className="bg-blancGlacialNeutre text-gray-500 rounded-xl px-3 py-1 text-sm focus:outline-none"
                             >
                                 <option value="name">Nom</option>
                                 <option value="location">Lieu</option>
                                 <option value="date">Date</option>
                             </select>
-                        )}
-                        <FaSearch className="text-gray-500" />
+                        </div>
+                        <FaSearch className="text-gray-500 ml-2" />
                         <input
                             type="text"
-                            placeholder="Rechercher des événements..."
+                            placeholder={
+                                searchType === "name" ? "Rechercher par nom..." :
+                                searchType === "location" ? "Rechercher par lieu..." :
+                                "Rechercher par date..."
+                            }
                             className="ml-2 bg-transparent outline-none w-full"
                             onFocus={() => setIsSearchFocused(true)}
                             onBlur={() => setIsSearchFocused(false)}
