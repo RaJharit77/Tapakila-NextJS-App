@@ -31,11 +31,14 @@ model Event {
   event_name        String
   event_date        DateTime
   event_place       String
-  event_description String
-  event_image       String
+  event_description String?
+  event_image       String?
   admin_id          String
   event_organizer   String
-  event_category    String
+  event_status      EventStatus @default(UPLOADED)
+  event_category    String?
+  event_creation_date DateTime @default(now())
+  event_tickets_limit_by_user_by_type Int @default(5)
   admin             Admin    @relation(fields: [admin_id], references: [admin_id])
   tickets           Ticket[]
 }
@@ -71,4 +74,9 @@ enum Status {
   AVAILABLE
   SOLD
   RESERVED
+}
+enum EventStatus {
+  CANCLED
+  UPLOADED
+  DRAFT
 }
