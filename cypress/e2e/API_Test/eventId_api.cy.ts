@@ -1,8 +1,8 @@
 describe("API - Récupération d'un événement spécifique", () => {
-    const apiUrl = "http://localhost:3000/api/events"; // Change l'URL si besoin
+    const apiUrl = "http://localhost:3000/api/events"; 
   
    
-    it.only("Devrait récupérer un événement par ID", () => {
+    it("Devrait récupérer un événement par ID", () => {
         cy.request({
           method: "GET",
           url: "http://localhost:3000/api/events/E008", 
@@ -19,5 +19,24 @@ describe("API - Récupération d'un événement spécifique", () => {
         });
   });
   
+  it.only("Devrait modifier un événement existant", () => {
+    const eventId = "E001"; 
+    const updatedEventData = {
+      event_name: "LOLI",
+    };
+
+    cy.request({
+      method: "PUT",
+      url: `${apiUrl}/${eventId}`, 
+      body: updatedEventData,
+      headers: {
+        "Content-Type": "application/json",
+      },
+    }).then((response) => {
+      console.log(response);
+      expect(response.status).to.eq(200);
+    });
+  });
+
 
 });
