@@ -1,7 +1,5 @@
 import Link from "next/link";
 import { FaCalendarAlt, FaMapMarkerAlt } from "react-icons/fa";
-import { useSession } from "next-auth/react";
-import { toast } from "react-hot-toast";
 
 interface EventCardProps {
     id: string;
@@ -20,25 +18,6 @@ export default function EventCard({
     description,
     imageUrl,
 }: EventCardProps) {
-    const handleViewDetails = (e: React.MouseEvent) => {
-        const user = localStorage.getItem("user");
-        if (!user) {
-            e.preventDefault();
-            toast.error(
-                "Veuillez vous connecter pour voir les détails de l'événement.",
-                {
-                    duration: 3000,
-                    position: "top-center",
-                    style: {
-                        backgroundColor: "#f87171",
-                        color: "#fff",
-                    },
-                    icon: "🔒",
-                }
-            );
-        }
-    };
-
     return (
         <div className="bg-blancGlacialNeutre rounded-xl shadow-md overflow-hidden hover:shadow-xl transition-shadow">
             <img src={imageUrl} alt={name} className="w-full h-52 object-cover" />
@@ -56,8 +35,7 @@ export default function EventCard({
                 <div className="mt-4">
                     <Link
                         href={`/events/${id}`}
-                        onClick={handleViewDetails}
-                        className="inline-block px-4 py-2 bg-bleuElec text-white rounded-md hover:bg-bleuNuit transition"
+                        className="inline-block px-4 py-2 bg-bleuElec text-white rounded-md hover:bg-bleuNuit hover:text-orMetallique transition"
                     >
                         Voir détails
                     </Link>

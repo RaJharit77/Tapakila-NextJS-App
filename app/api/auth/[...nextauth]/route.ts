@@ -1,4 +1,3 @@
-
 import authconfig from "@/lib/auth.config";
 import { prisma } from "@/lib/prisma";
 import NextAuth from "next-auth";

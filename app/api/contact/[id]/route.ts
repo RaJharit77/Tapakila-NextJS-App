@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { NextResponse } from "next/server";
 
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
     try {
@@ -13,13 +14,13 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
         })
 
         if (message == null) {
-            return new Response(JSON.stringify({ error: "Message not found" }), { status: 404 })
+            return new NextResponse(JSON.stringify({ error: "Message not found" }), { status: 404 })
         }
-        return new Response(JSON.stringify(message), { status: 200, headers: { 'Content-Type': 'application/json' } })
+        return new NextResponse(JSON.stringify(message), { status: 200, headers: { 'Content-Type': 'application/json' } })
     }
     catch (e) {
         console.error("Error finding the message ", e)
-        return new Response(JSON.stringify({ error: "Repository erro" }),
+        return new NextResponse(JSON.stringify({ error: "Repository erro" }),
             { status: 500 }
         )
     } finally {
