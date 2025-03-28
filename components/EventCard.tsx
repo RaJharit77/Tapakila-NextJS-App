@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { FaCalendarAlt, FaMapMarkerAlt } from "react-icons/fa";
 
 interface EventCardProps {
@@ -18,24 +19,53 @@ export default function EventCard({
     description,
     imageUrl,
 }: EventCardProps) {
+    const getValidImageUrl = (url: string) => {
+        try {
+            new URL(url);
+            return url;
+        } catch (e) {
+            return '/img/404NotFound.jpg';
+        }
+    };
+
+    const validImageUrl = getValidImageUrl(imageUrl);
+
     return (
-        <div className="bg-blancGlacialNeutre rounded-xl shadow-md overflow-hidden hover:shadow-xl transition-shadow">
-            <img src={imageUrl} alt={name} className="w-full h-52 object-cover" />
-            <div className="p-4">
+        <div className="bg-blancGlacialNeutre rounded-xl shadow-md overflow-hidden hover:shadow-xl transition-shadow h-full flex flex-col">
+            <div className="relative w-full aspect-[4/3]">
+                <Image
+                    src={validImageUrl}
+                    alt={`${name}`}
+                    fill
+                    className="object-center object-contain"
+                    priority={false}
+                    onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.src = '/img/404NotFound.jpg';
+                    }}
+                />
+            </div>
+            <div className="p-3 flex-grow flex flex-col">
                 <h3 className="text-xl font-bold text-bleuNuit">{name}</h3>
-                <p className="text-bleuNuit mt-2">{description}</p>
-                <div className="mt-4 flex items-center text-grisAnthracite text-sm">
-                    <FaCalendarAlt className="mr-2" />
-                    <span>{new Date(date).toLocaleDateString()}</span>
+                <p className="text-bleuNuit mt-2 line-clamp-2">{description}</p>
+                <div className="mt-3 flex items-center text-grisAnthracite text-sm">
+                    <FaCalendarAlt className="mr-2 flex-shrink-0" />
+                    <span>
+                        {new Date(date).toLocaleDateString('fr-FR', {
+                            day: 'numeric',
+                            month: 'long',
+                            year: 'numeric'
+                        })}
+                    </span>
                 </div>
                 <div className="mt-2 flex items-center text-grisAnthracite text-sm">
-                    <FaMapMarkerAlt className="mr-2" />
-                    <span>{location}</span>
+                    <FaMapMarkerAlt className="mr-2 flex-shrink-0" />
+                    <span className="truncate">{location}</span>
                 </div>
-                <div className="mt-4">
+                <div className="mt-2 flex-grow flex items-center justify-center">
                     <Link
                         href={`/events/${id}`}
-                        className="inline-block px-4 py-2 bg-bleuElec text-white rounded-md hover:bg-bleuNuit hover:text-orMetallique transition"
+                        className="inline-block px-4 py-2 bg-bleuElec text-white rounded-md hover:bg-bleuNuit hover:text-orMetallique transition-colors duration-300 text-center w-full"
                     >
                         Voir détails
                     </Link>

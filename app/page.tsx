@@ -103,40 +103,64 @@ export default function Home() {
 
       <section
         className="relative py-16 bg-cover bg-center"
-        style={{
-          backgroundImage: "url('/img/event.jpg')",
-        }}
-      >
+        style={{ backgroundImage: "url('/img/event.jpg')" }}>
+
         <div className="absolute inset-0 bg-black bg-opacity-50"></div>
-        <div className="relative z-10">
-          <h2 className="text-2xl font-bold text-blancGlacialNeutre mb-8 text-center">
+
+        <div className="relative z-10 container mx-auto px-3">
+          <h2 className="text-3xl font-bold text-blancGlacialNeutre mb-12 text-center">
             Événements à l'affiche
           </h2>
+
           {upcomingEvents.length > 0 ? (
-            <Swiper
-              spaceBetween={30}
-              centeredSlides={true}
-              autoplay={{
-                delay: 2500,
-                disableOnInteraction: false,
-              }}
-              pagination={{
-                clickable: true,
-              }}
-              navigation={true}
-              modules={[Autoplay, Pagination, Navigation]}
-              className="mySwiper"
-            >
-              {upcomingEvents.map((event) => (
-                <SwiperSlide key={event.id}>
-                  <div className="flex justify-center">
-                    <EventCard {...event} />
-                  </div>
-                </SwiperSlide>
-              ))}
-            </Swiper>
+            <div className="px-12">
+              <Swiper
+                slidesPerView={1}
+                spaceBetween={30}
+                centeredSlides={true}
+                loop={true}
+                autoplay={{
+                  delay: 5000,
+                  disableOnInteraction: true,
+                }}
+                pagination={{
+                  clickable: true,
+                  dynamicBullets: true,
+                }}
+                navigation={{
+                  nextEl: '.swiper-button-next',
+                  prevEl: '.swiper-button-prev',
+                }}
+                modules={[Autoplay, Pagination, Navigation]}
+                breakpoints={{
+                  640: {
+                    slidesPerView: 1,
+                  },
+                  768: {
+                    slidesPerView: 1,
+                  },
+                  1024: {
+                    slidesPerView: 1,
+                  },
+                }}
+                className="relative"
+              >
+                {upcomingEvents.map((event) => (
+                  <SwiperSlide key={event.id}>
+                    <div className="flex justify-center items-center h-full py-3">
+                      <div className="w-full max-w-md mx-auto">
+                        <EventCard {...event} />
+                      </div>
+                    </div>
+                  </SwiperSlide>
+                ))}
+
+                <div className="swiper-button-prev !text-orMetallique !left-0"></div>
+                <div className="swiper-button-next !text-orMetallique !right-0"></div>
+              </Swiper>
+            </div>
           ) : (
-            <p className="text-blancGlacialNeutre text-xl text-center">
+            <p className="text-blancGlacialNeutre text-xl text-center py-12">
               Aucun événement à l'affiche pour le moment.
             </p>
           )}

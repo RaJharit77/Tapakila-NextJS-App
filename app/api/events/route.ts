@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 
 enum EventStatus {
+    CANCLED = "CANCLED",
     UPLOADED = "UPLOADED",
     DRAFT = "DRAFT"
 }
