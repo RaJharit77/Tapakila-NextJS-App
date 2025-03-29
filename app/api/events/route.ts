@@ -7,14 +7,16 @@ export async function GET(request: Request) {
         const url = new URL(request.url);
         const status = url.searchParams.get('status');
         const page = url.searchParams.get('page');
+        const pageSize = parseInt(url.searchParams.get('pageSize') || "10");
+        
         
         let events = await prisma.event.findMany({
             include: {
                 tickets: true,
 
             },
-            take: 10,
-            skip: page ? (parseInt(page) - 1) * 10 : 0
+            take: pageSize ,
+            skip: page ? (parseInt(page) - 1) * pageSize : 0
         });
 
         if(status){
@@ -25,10 +27,11 @@ export async function GET(request: Request) {
                 include: {
                     tickets: true,
                 }, 
-                take: 10,
-                skip: page ? (parseInt(page) - 1) * 10 : 0
+                take: pageSize,
+                skip: page ? (parseInt(page) - 1) * pageSize : 0
             })
         }
+
         return new NextResponse(JSON.stringify(events), {
             status: 200,
             headers: { 'Content-Type': 'application/json' },

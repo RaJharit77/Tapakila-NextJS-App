@@ -7,8 +7,22 @@ servers:
   - url: https://api.tapakila.io/v1
 paths:
   /users:
+
     get:
       summary: Get list of users
+      parameters:
+        - name: page
+          in: query
+          required: true
+          description: the page of the user list
+          schema:
+            type: integer
+        - name: pageSize
+          in: query
+          required: true
+          description: the number of user you want to show
+          schema:
+            type: integer
       responses:
         '200':
           description: A list of users
@@ -18,6 +32,7 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/User'
+
     post:
       summary: Create a new user
       requestBody:
@@ -33,7 +48,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/User'
-  /users/{userId}:
+  /users/{id}:
     get:
       summary: Get a user by ID
       parameters:
@@ -49,9 +64,60 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/User'
+    put:
+      description: editing an user
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      requestBody:
+        $ref: "#/components/schemas/User" # juste une cle valeur d'un attribut de user
+      responses:
+        200:
+          description: user edited successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+    delete:
+      description: deleting an user
+      parameters:
+        - name: id
+          required: true
+          schema:
+            type: string
+          in: path
+      responses:
+        200:
+          description:
+          content:
+            application/json:
+              schema:
+                type: boolean
   /events:
     get:
       summary: Get list of events
+      parameters:
+        - name: page
+          in: query
+          required: true
+          description: the page of the user list
+          schema:
+            type: integer
+        - name: pageSize
+          in: query
+          required: true
+          description: the number of user you want to show
+          schema:
+            type: integer
+        - name: status
+          in: query
+          required: false
+          description: filtering the events by its status
+          schema:
+            type: string
       responses:
         '200':
           description: A list of events
@@ -77,6 +143,38 @@ paths:
               schema:
                 $ref: '#/components/schemas/Event'
   /events/{eventId}:
+    put:
+      description: Edit an event, also to set an event status
+      parameters:
+        - name: eventId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        $ref: "#/components/schemas/Event" # or one field of the event object
+      responses:
+        200:
+          description: Event edition status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Event"
+    delete:
+      description: New endpoint
+      parameters:
+        - name: eventId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Event deletion status
+          content:
+            application/json:
+              schema:
+                type: boolean
     get:
       summary: Get an event by ID
       parameters:
@@ -92,6 +190,111 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Event'
+  /tickets:
+    delete:
+      description: Delete a certain number of a ticket
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Event'
+      responses:
+        200:
+          description: Ticket deleted successfully
+
+    post:
+      description: Creating a certain number of tickets
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TicketCondition"
+      responses:
+        201:
+          description: Ticket created
+          content:
+            application/json:
+              schema:
+                type: array
+                items: 
+                  $ref: "#/components/schemas/Ticket"
+
+    get:
+      summary: Get the number of sold tickets
+      parameters:
+        - in: query
+          name: NewParameter
+          description: New parameter
+          required: true
+          schema:
+            type: string
+        - name: page
+          in: query
+          required: true
+          description: the page of the ticket list
+          schema:
+            type: integer
+        - name: pageSize
+          in: query
+          required: true
+          description: the number of ticket you want to show
+          schema:
+            type: integer
+        - name: status
+          in: query
+          required: false
+          description: filtering the list of tickets by its status
+          schema:
+            type: string
+
+      responses:
+        200:
+          description: A list of a ticket or a number of sold tickets
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Ticket"
+  /tickets/id:
+    put:
+      description: Edit a ticket by its id
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Ticket"
+      responses:
+        200:
+          description: New response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Ticket"
+    get:
+      description: Finding ticket by its id
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:                :
+        200:
+          description: New response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Ticket"
+
+
+
 components:
   schemas:
     User:
@@ -115,3 +318,29 @@ components:
           format: date-time
         location:
           type: string
+    Ticket:
+      type: object
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+        price:
+          type: integer
+        status:
+          type: string
+        creation_date:
+          type: string
+          format: datetime
+          example: 2025-05-17T15:00:00.000Z
+    TicketCondition:
+      type: object
+      properties:
+        ticketNumber:
+          type: integer
+        idEvent:
+          type: string
+        ticket_type:
+          type: string
+        ticketPrice:
+          type: integer
