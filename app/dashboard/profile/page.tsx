@@ -69,7 +69,7 @@ const ProfilePage = () => {
                             <p className="mt-1 text-lg text-blancCasse">{user.user_email}</p>
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-orMetallique">Date d'adhésion</label>
+                            <label className="block text-sm font-medium text-orMetallique">Date d&apos;adhésion</label>
                             <p className="mt-1 text-lg text-blancCasse">
                                 {new Date(user.date_joined).toLocaleDateString()}
                             </p>
@@ -105,7 +105,7 @@ const ProfilePage = () => {
                         onClick={() => router.push("/")}
                         className="px-6 py-3 bg-bleuElec text-blancCasse rounded-lg hover:bg-bleuNuit hover:text-orMetallique transition duration-300"
                     >
-                        Retour à l'accueil
+                        Retour à l&apos;accueil
                     </button>
                 </div>
             </div>

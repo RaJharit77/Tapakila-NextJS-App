@@ -3,12 +3,23 @@
 import EventCard from "@/components/EventCard";
 import { Slide } from "@mui/material";
 import Link from "next/link";
+import Image from "next/image";
 import { useEffect, useState } from "react";
+import { Autoplay, Navigation, Pagination } from "swiper/modules";
+import { Swiper, SwiperSlide } from "swiper/react";
 import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
-import { Autoplay, Navigation, Pagination } from "swiper/modules";
-import { Swiper, SwiperSlide } from "swiper/react";
+
+interface ApiEvent {
+  event_id: string;
+  event_name: string;
+  event_date: string;
+  event_place: string;
+  event_description: string;
+  event_image: string;
+  event_category?: string;
+}
 
 interface Event {
   id: string;
@@ -35,9 +46,9 @@ export default function Home() {
           throw new Error("Erreur de chargement de la page");
         }
 
-        const data = await response.json();
+        const data: ApiEvent[] = await response.json();
 
-        const formattedEvents = data.map((event: any) => ({
+        const formattedEvents: Event[] = data.map((event) => ({
           id: event.event_id,
           name: event.event_name,
           date: event.event_date,
@@ -48,7 +59,6 @@ export default function Home() {
         }));
 
         setEvents(formattedEvents);
-
       } catch (err) {
         setError(err instanceof Error ? err.message : "An error occurred");
       } finally {
@@ -60,18 +70,55 @@ export default function Home() {
   }, []);
 
   const currentDate = new Date();
-
   const upcomingEvents = events.filter((event) => new Date(event.date) >= currentDate);
   const pastEvents = events.filter((event) => new Date(event.date) < currentDate);
 
+  const renderEventSection = (
+    title: string,
+    filterFn: (event: Event) => boolean,
+    bgImage: string,
+    emptyMessage: string
+  ) => (
+    <section className="relative py-12 px-6">
+      <Image
+        src={bgImage}
+        alt={`Background ${title}`}
+        fill
+        className="object-cover"
+        quality={80}
+      />
+      <div className="absolute inset-0 bg-black bg-opacity-50"></div>
+      <div className="relative z-10">
+        <h2 className="text-2xl font-bold text-blancGlacialNeutre mb-8">
+          {title}
+        </h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {upcomingEvents.filter(filterFn).length > 0 ? (
+            upcomingEvents.filter(filterFn).map((event) => (
+              <EventCard key={event.id} {...event} />
+            ))
+          ) : (
+            <p className="text-blancGlacialNeutre text-xl text-center col-span-full">
+              {emptyMessage}
+            </p>
+          )}
+        </div>
+      </div>
+    </section>
+  );
+
   return (
     <div className="bg-blancGlacialNeutre min-h-screen">
-      <section
-        className="relative h-screen flex items-center justify-start bg-cover bg-center"
-        style={{
-          backgroundImage: "url('/img/home.jpg')",
-        }}
-      >
+      {/* Hero Section */}
+      <section className="relative h-screen flex items-center justify-start">
+        <Image
+          src="/img/home.jpg"
+          alt="Background accueil"
+          fill
+          className="object-cover"
+          quality={80}
+          priority
+        />
         <div className="absolute inset-0 bg-black bg-opacity-50"></div>
         <div className="relative z-10 text-blancGlacialNeutre px-8 lg:px-16">
           {loading ? (
@@ -101,15 +148,18 @@ export default function Home() {
         </div>
       </section>
 
-      <section
-        className="relative py-16 bg-cover bg-center"
-        style={{ backgroundImage: "url('/img/event.jpg')" }}>
-
+      <section className="relative py-16">
+        <Image
+          src="/img/event.jpg"
+          alt="Événements à l&apos;affiche"
+          fill
+          className="object-cover"
+          quality={80}
+        />
         <div className="absolute inset-0 bg-black bg-opacity-50"></div>
-
         <div className="relative z-10 container mx-auto px-3">
           <h2 className="text-3xl font-bold text-blancGlacialNeutre mb-12 text-center">
-            Événements à l'affiche
+            Événements à l&apos;affiche
           </h2>
 
           {upcomingEvents.length > 0 ? (
@@ -133,15 +183,9 @@ export default function Home() {
                 }}
                 modules={[Autoplay, Pagination, Navigation]}
                 breakpoints={{
-                  640: {
-                    slidesPerView: 1,
-                  },
-                  768: {
-                    slidesPerView: 1,
-                  },
-                  1024: {
-                    slidesPerView: 1,
-                  },
+                  640: { slidesPerView: 1 },
+                  768: { slidesPerView: 1 },
+                  1024: { slidesPerView: 1 },
                 }}
                 className="relative"
               >
@@ -161,143 +205,55 @@ export default function Home() {
             </div>
           ) : (
             <p className="text-blancGlacialNeutre text-xl text-center py-12">
-              Aucun événement à l'affiche pour le moment.
+              Aucun événement à l&apos;affiche pour le moment.
             </p>
           )}
         </div>
       </section>
 
-      <section
-        className="relative py-16 px-6 bg-cover bg-center"
-        style={{
-          backgroundImage: "url('/img/eventSoon.jpg')",
-        }}
-      >
-        <div className="absolute inset-0 bg-black bg-opacity-50"></div>
-        <div className="relative z-10">
-          <h2 className="text-2xl font-bold text-blancGlacialNeutre mb-8 text-center">
-            Événements à Venir
-          </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {upcomingEvents.length > 0 ? (
-              upcomingEvents.map((event) => (
-                <EventCard key={event.id} {...event} />
-              ))
-            ) : (
-              <p className="text-blancGlacialNeutre text-xl text-center">
-                Aucun événement à venir pour le moment.
-              </p>
-            )}
-          </div>
-        </div>
-      </section>
+      {renderEventSection(
+        "Événements à Venir",
+        () => true,
+        "/img/eventSoon.jpg",
+        "Aucun événement à venir pour le moment."
+      )}
 
-      <section
-        className="relative py-12 px-6 bg-cover bg-center"
-        style={{
-          backgroundImage: "url('/img/concert.jpg')",
-        }}
-      >
-        <div className="absolute inset-0 bg-black bg-opacity-50"></div>
-        <div className="relative z-10">
-          <h2 className="text-2xl font-bold text-blancGlacialNeutre mb-8">Spectacles & Concerts</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {upcomingEvents.filter((event) => event.category === "Spectacle" || event.category === "Concert").length > 0 ? (
-              upcomingEvents
-                .filter((event) => event.category === "Spectacle" || event.category === "Concert")
-                .map((event) => (
-                  <EventCard key={event.id} {...event} />
-                ))
-            ) : (
-              <p className="text-blancGlacialNeutre text-xl text-center">
-                Aucun spectacle ou concert disponible pour le moment.
-              </p>
-            )}
-          </div>
-        </div>
-      </section>
+      {renderEventSection(
+        "Spectacles & Concerts",
+        (event) => event.category === "Spectacle" || event.category === "Concert",
+        "/img/concert.jpg",
+        "Aucun spectacle ou concert disponible pour le moment."
+      )}
 
-      <section
-        className="relative py-12 px-6 bg-cover bg-center"
-        style={{
-          backgroundImage: "url('/img/festival.jpg')",
-        }}
-      >
-        <div className="absolute inset-0 bg-black bg-opacity-50"></div>
-        <div className="relative z-10">
-          <h2 className="text-2xl font-bold text-blancGlacialNeutre mb-8">Festival & Culture</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {upcomingEvents.filter((event) => event.category === "Culture" || event.category === "Théâtre" || event.category === "Festival").length > 0 ? (
-              upcomingEvents
-                .filter((event) => event.category === "Culture" || event.category === "Théâtre" || event.category === "Festival")
-                .map((event) => (
-                  <EventCard key={event.id} {...event} />
-                ))
-            ) : (
-              <p className="text-blancGlacialNeutre text-xl text-center">
-                Aucun festival ou événement culturel disponible pour le moment.
-              </p>
-            )}
-          </div>
-        </div>
-      </section>
+      {renderEventSection(
+        "Festival & Culture",
+        (event) => ["Culture", "Théâtre", "Festival"].includes(event.category),
+        "/img/festival.jpg",
+        "Aucun festival ou événement culturel disponible pour le moment."
+      )}
 
-      <section
-        className="relative py-12 px-6 bg-cover bg-center"
-        style={{
-          backgroundImage: "url('/img/football.jpg')",
-        }}
-      >
-        <div className="absolute inset-0 bg-black bg-opacity-50"></div>
-        <div className="relative z-10">
-          <h2 className="text-2xl font-bold text-blancGlacialNeutre mb-8">Sports & Loisirs</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {upcomingEvents.filter((event) => event.category === "Sport" || event.category === "Loisir").length > 0 ? (
-              upcomingEvents
-                .filter((event) => event.category === "Sport" || event.category === "Loisir")
-                .map((event) => (
-                  <EventCard key={event.id} {...event} />
-                ))
-            ) : (
-              <p className="text-blancGlacialNeutre text-xl text-center">
-                Aucun événement sportif disponible pour le moment.
-              </p>
-            )}
-          </div>
-        </div>
-      </section>
+      {renderEventSection(
+        "Sports & Loisirs",
+        (event) => event.category === "Sport" || event.category === "Loisir",
+        "/img/football.jpg",
+        "Aucun événement sportif disponible pour le moment."
+      )}
 
-      <section
-        className="relative py-12 px-6 bg-cover bg-center"
-        style={{
-          backgroundImage: "url('/img/bgOther.jpg')",
-        }}
-      >
-        <div className="absolute inset-0 bg-black bg-opacity-50"></div>
-        <div className="relative z-10">
-          <h2 className="text-2xl font-bold text-blancGlacialNeutre mb-8">Autres</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {upcomingEvents.filter((event) => event.category === "Autres" || event.category === "Conférence").length > 0 ? (
-              upcomingEvents
-                .filter((event) => event.category === "Autres" || event.category === "Conférence")
-                .map((event) => (
-                  <EventCard key={event.id} {...event} />
-                ))
-            ) : (
-              <p className="text-blancGlacialNeutre text-xl text-center">
-                Aucun autre événement disponible pour le moment.
-              </p>
-            )}
-          </div>
-        </div>
-      </section>
+      {renderEventSection(
+        "Autres",
+        (event) => event.category === "Autres" || event.category === "Conférence",
+        "/img/bgOther.jpg",
+        "Aucun autre événement disponible pour le moment."
+      )}
 
-      <section
-        className="relative py-12 px-6 bg-cover bg-center"
-        style={{
-          backgroundImage: "url('/img/pastEvent.jpg')",
-        }}
-      >
+      <section className="relative py-12 px-6">
+        <Image
+          src="/img/pastEvent.jpg"
+          alt="Événements passés"
+          fill
+          className="object-cover"
+          quality={80}
+        />
         <div className="absolute inset-0 bg-black bg-opacity-50"></div>
         <div className="relative z-10">
           <h2 className="text-2xl font-bold text-blancGlacialNeutre mb-8">
@@ -309,7 +265,7 @@ export default function Home() {
                 <EventCard key={event.id} {...event} />
               ))
             ) : (
-              <p className="text-blancGlacialNeutre text-xl text-center">
+              <p className="text-blancGlacialNeutre text-xl text-center col-span-full">
                 Aucun événement passé disponible pour le moment.
               </p>
             )}

@@ -1,41 +1,57 @@
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
+import type { EventStatus } from "@prisma/client";
 
-enum EventStatus {
-    CANCLED = "CANCLED",
-    UPLOADED = "UPLOADED",
-    DRAFT = "DRAFT"
+interface EventWhereClause {
+    event_status?: EventStatus;
+    event_name?: { contains: string; mode: "insensitive" };
+    event_place?: { contains: string; mode: "insensitive" };
+    event_date?: {
+        gte: Date;
+        lt: Date;
+    };
+}
+
+interface EventPostData {
+    event_name: string;
+    event_place: string;
+    event_category: string;
+    event_date: string;
+    event_description?: string;
+    event_organizer?: string;
+    event_image?: string;
+    admin_id: string;
 }
 
 export async function GET(request: Request) {
     try {
         const url = new URL(request.url);
-        const status = url.searchParams.get('status');
-        const page = url.searchParams.get('page');
-        const name = url.searchParams.get('name');
-        const location = url.searchParams.get('location');
-        const date = url.searchParams.get('date');
-        
-        let whereClause: any = {};
-        
+        const status = url.searchParams.get("status") as EventStatus | null;
+        const page = url.searchParams.get("page");
+        const name = url.searchParams.get("name");
+        const location = url.searchParams.get("location");
+        const date = url.searchParams.get("date");
+
+        const whereClause: EventWhereClause = {};
+
         if (status) {
-            whereClause.event_status = status as EventStatus;
+            whereClause.event_status = status;
         }
-        
+
         if (name) {
-            whereClause.event_name = { contains: name, mode: 'insensitive' };
+            whereClause.event_name = { contains: name, mode: "insensitive" };
         }
-        
+
         if (location) {
-            whereClause.event_place = { contains: location, mode: 'insensitive' };
+            whereClause.event_place = { contains: location, mode: "insensitive" };
         }
-        
+
         if (date) {
-            const [day, month, year] = date.split('/');
-            const formattedDate = `${year}-${month}-${day}`;
+            const [day, month, year] = date.split("/");
+            const formattedDate = new Date(`${year}-${month}-${day}`);
             whereClause.event_date = {
-                gte: new Date(formattedDate),
-                lt: new Date(new Date(formattedDate).getTime() + 24 * 60 * 60 * 1000)
+                gte: formattedDate,
+                lt: new Date(formattedDate.getTime() + 24 * 60 * 60 * 1000),
             };
         }
 
@@ -45,81 +61,73 @@ export async function GET(request: Request) {
                 tickets: true,
             },
             take: 10,
-            skip: page ? (parseInt(page) - 1) * 10 : 0
+            skip: page ? (parseInt(page) - 1) * 10 : 0,
         });
 
-        return new NextResponse(JSON.stringify(events), {
-            status: 200,
-            headers: { 'Content-Type': 'application/json' },
-        });
+        return NextResponse.json(events);
     } catch (error) {
         console.error("Error fetching events:", error);
-        return new NextResponse(JSON.stringify({ error: "Failed to fetch events" }), {
-            status: 500,
-            headers: { 'Content-Type': 'application/json' },
-        });
+        return NextResponse.json(
+            { error: "Failed to fetch events" },
+            { status: 500 }
+        );
     } finally {
         await prisma.$disconnect();
     }
 }
 
-
 export async function POST(request: Request) {
     try {
-        const body = await request.json()
-        const { event_name, event_place, event_category, event_date, event_description, event_organizer, event_image, admin_id } = body
-        if (!event_name || !event_place || !event_category || !event_date) {
-            return new NextResponse(JSON.stringify({ error: 'those field must be filled! ' }))
+        const body: EventPostData = await request.json();
+        const { event_name, event_place, event_category, event_date, admin_id } = body;
+
+        if (!event_name || !event_place || !event_category || !event_date || !admin_id) {
+            return NextResponse.json(
+                { error: "Required fields are missing" },
+                { status: 400 }
+            );
         }
-        else {
 
-            let status = "UPLOADED" as EventStatus
-            const lastCreatedEvent = await prisma.event.findFirst({
-                orderBy: {
-                    event_creation_date: 'desc'
-                }
-            })
-            const lastEventId = lastCreatedEvent ? lastCreatedEvent.event_id : null
-            const splited = lastEventId == null ? 1 : parseInt(lastEventId?.split("E").join("")) + 1
-            const event_id = `E${"0".repeat(5 - splited.toString.length)}${splited}`
-            console.log(lastCreatedEvent)
+        let status: EventStatus = "UPLOADED";
+        const lastCreatedEvent = await prisma.event.findFirst({
+            orderBy: { event_creation_date: "desc" },
+            select: { event_id: true },
+        });
 
-            if (!event_category || !event_image || !event_description) {
-                status = "DRAFT" as EventStatus
-            }
+        const lastEventNumber = lastCreatedEvent
+            ? parseInt(lastCreatedEvent.event_id.slice(1))
+            : 0;
+        const newEventNumber = lastEventNumber + 1;
+        const event_id = `E${newEventNumber.toString().padStart(5, "0")}`;
 
-
-
-            const newEv = await prisma.event.create({
-                data: {
-                    event_name,
-                    event_place,
-                    event_category,
-                    event_date,
-                    event_description,
-                    event_image,
-                    event_organizer,
-                    event_id: event_id,
-                    admin_id,
-                    event_creation_date: new Date().toISOString(),
-                    event_status: status
-                }
-
-            })
-
-            return new NextResponse(JSON.stringify(newEv), {
-                status: 201
-            })
+        if (!body.event_category || !body.event_image || !body.event_description) {
+            status = "DRAFT";
         }
-    }
-    catch (error) {
-        console.error("Error while creating the event", error)
-        return new NextResponse(JSON.stringify({ error: "Repository error" }),
+
+        const newEvent = await prisma.event.create({
+            data: {
+                event_id,
+                event_name,
+                event_place,
+                event_category,
+                event_date: new Date(event_date),
+                event_description: body.event_description,
+                event_image: body.event_image,
+                event_organizer: body.event_organizer ?? "",
+                admin_id,
+                event_creation_date: new Date(),
+                event_status: status,
+            },
+        });
+
+        return NextResponse.json(newEvent, { status: 201 });
+    } catch (error) {
+        console.error("Error while creating the event:", error);
+        return NextResponse.json(
+            { error: "Internal server error" },
             { status: 500 }
-        )
-    }
-
-    finally {
-        await prisma.$disconnect()
+        );
+    } finally {
+        await prisma.$disconnect();
     }
 }

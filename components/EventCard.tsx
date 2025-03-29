@@ -23,12 +23,17 @@ export default function EventCard({
         try {
             new URL(url);
             return url;
-        } catch (e) {
+        } catch {
             return '/img/404NotFound.jpg';
         }
     };
 
     const validImageUrl = getValidImageUrl(imageUrl);
+
+    const handleImageError = (e: React.SyntheticEvent<HTMLImageElement>) => {
+        const target = e.target as HTMLImageElement;
+        target.src = '/img/404NotFound.jpg';
+    };
 
     return (
         <div className="bg-blancGlacialNeutre rounded-xl shadow-md overflow-hidden hover:shadow-xl transition-shadow h-full flex flex-col">
@@ -39,10 +44,7 @@ export default function EventCard({
                     fill
                     className="object-center object-contain"
                     priority={false}
-                    onError={(e) => {
-                        const target = e.target as HTMLImageElement;
-                        target.src = '/img/404NotFound.jpg';
-                    }}
+                    onError={handleImageError}
                 />
             </div>
             <div className="p-3 flex-grow flex flex-col">
