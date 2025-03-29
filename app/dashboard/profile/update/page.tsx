@@ -10,20 +10,16 @@ interface User {
     user_name: string;
     user_email: string;
     user_first_login_date: string;
-    city: string;
-    postal_code: string;
-    country: string;
-    address: string;
+    address?: string;
+    city?: string;
 }
 
 const UpdateProfilePage = () => {
     const [user, setUser] = useState<User | null>(null);
     const [formData, setFormData] = useState({
         user_name: "",
-        city: "",
-        postal_code: "",
-        country: "",
         address: "",
+        city: "",
     });
     const router = useRouter();
 
@@ -38,10 +34,8 @@ const UpdateProfilePage = () => {
                 setUser(data);
                 setFormData({
                     user_name: data.user_name,
-                    city: data.city,
-                    postal_code: data.postal_code,
-                    country: data.country,
-                    address: data.address,
+                    address: data.address || "",
+                    city: data.city || "",
                 });
             } catch (error) {
                 console.error("Error fetching user profile:", error);
@@ -110,11 +104,22 @@ const UpdateProfilePage = () => {
                 <h1 className="text-3xl font-bold mb-6 text-center text-blancCasse">Mettre à jour le profil</h1>
                 <form onSubmit={handleSubmit} className="space-y-6">
                     <div>
-                        <label className="block text-sm font-medium text-orMetallique">Nom et Prénom</label>
+                        <label className="block text-sm font-medium text-orMetallique">Nom</label>
                         <input
                             type="text"
                             name="user_name"
                             value={formData.user_name}
+                            onChange={handleChange}
+                            required
+                            className="mt-1 block w-full px-4 py-2 bg-bleuNuit border border-gray-700 rounded-lg shadow-sm focus:outline-none focus:ring-bleuElec focus:border-bleuElec"
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium text-orMetallique">Adresse</label>
+                        <input
+                            type="text"
+                            name="address"
+                            value={formData.address}
                             onChange={handleChange}
                             className="mt-1 block w-full px-4 py-2 bg-bleuNuit border border-gray-700 rounded-lg shadow-sm focus:outline-none focus:ring-bleuElec focus:border-bleuElec"
                         />
@@ -125,36 +130,6 @@ const UpdateProfilePage = () => {
                             type="text"
                             name="city"
                             value={formData.city}
-                            onChange={handleChange}
-                            className="mt-1 block w-full px-4 py-2 bg-bleuNuit border border-gray-700 rounded-lg shadow-sm focus:outline-none focus:ring-bleuElec focus:border-bleuElec"
-                        />
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium text-orMetallique">Code Postal</label>
-                        <input
-                            type="text"
-                            name="postal_code"
-                            value={formData.postal_code}
-                            onChange={handleChange}
-                            className="mt-1 block w-full px-4 py-2 bg-bleuNuit border border-gray-700 rounded-lg shadow-sm focus:outline-none focus:ring-bleuElec focus:border-bleuElec"
-                        />
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium text-orMetallique">Pays</label>
-                        <input
-                            type="text"
-                            name="country"
-                            value={formData.country}
-                            onChange={handleChange}
-                            className="mt-1 block w-full px-4 py-2 bg-bleuNuit border border-gray-700 rounded-lg shadow-sm focus:outline-none focus:ring-bleuElec focus:border-bleuElec"
-                        />
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium text-orMetallique">Adresse</label>
-                        <input
-                            type="text"
-                            name="address"
-                            value={formData.address}
                             onChange={handleChange}
                             className="mt-1 block w-full px-4 py-2 bg-bleuNuit border border-gray-700 rounded-lg shadow-sm focus:outline-none focus:ring-bleuElec focus:border-bleuElec"
                         />
