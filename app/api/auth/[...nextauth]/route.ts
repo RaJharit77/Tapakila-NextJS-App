@@ -1,5 +1,4 @@
 import NextAuth from "next-auth";
-import { JWT } from "next-auth/jwt";
 import Credentials from "next-auth/providers/credentials";
 import { compare } from "bcryptjs";
 import { prisma } from "@/lib/prisma";

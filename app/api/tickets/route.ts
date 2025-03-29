@@ -13,7 +13,24 @@ export async function GET(request: Request) {
       where:{
         ticket_status: "SOLD" as Status
       }
-    })
+    });
+
+    const ticketStats = await prisma.ticket.groupBy({
+      by: ['ticket_type'],
+      where: {
+        ticket_status: "SOLD" as Status
+      },
+      _count: {
+        ticket_type: true
+      }
+    });
+
+    const formattedStats = {
+      vipCount: ticketStats.find(stat => stat.ticket_type === 'VIP')?._count.ticket_type || 0,
+      standardCount: ticketStats.find(stat => stat.ticket_type === 'STANDARD')?._count.ticket_type || 0,
+      earlyBirdCount: ticketStats.find(stat => stat.ticket_type === 'EARLY_BIRD')?._count.ticket_type || 0,
+      total: ticketStats.reduce((sum, stat) => sum + stat._count.ticket_type, 0)
+    };
 
     if(status || type || idEvent){
       const tickets = await prisma.ticket.findMany({
@@ -26,12 +43,8 @@ export async function GET(request: Request) {
 
       return NextResponse.json({ tickets }, { status: 200 });
     }
-  
 
-
-
-    return NextResponse.json({ ticketsNumber }, { status: 200 });
-    
+    return NextResponse.json({ ...formattedStats, ticketsNumber }, { status: 200 });
 
   } catch (error) {
     console.error('Error fetching data:', error);

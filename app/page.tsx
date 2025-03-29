@@ -31,11 +31,18 @@ interface Event {
   category: string;
 }
 
+interface TicketStats {
+  type: string;
+  count: number;
+  color: string;
+}
+
 export default function Home() {
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showContent, setShowContent] = useState(false);
+  const [ticketStats, setTicketStats] = useState<TicketStats[]>([]);
 
   useEffect(() => {
     async function fetchEvents() {
@@ -68,6 +75,31 @@ export default function Home() {
     }
     fetchEvents();
   }, []);
+
+  useEffect(() => {
+    async function fetchTicketStats() {
+      try {
+        const response = await fetch('/api/tickets');
+        const data = await response.json();
+
+        const stats: TicketStats[] = [
+          { type: 'VIP', count: data.vipCount || 0, color: '#FF6384' },
+          { type: 'STANDARD', count: data.standardCount || 0, color: '#36A2EB' },
+          { type: 'EARLY_BIRD', count: data.earlyBirdCount || 0, color: '#FFCE56' }
+        ];
+
+        setTicketStats(stats);
+      } catch (error) {
+        console.error("Error fetching ticket stats:", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchTicketStats();
+  }, []);
+
+  const total = ticketStats.reduce((sum, stat) => sum + stat.count, 0);
 
   const currentDate = new Date();
   const upcomingEvents = events.filter((event) => new Date(event.date) >= currentDate);
@@ -109,7 +141,6 @@ export default function Home() {
 
   return (
     <div className="bg-blancGlacialNeutre min-h-screen">
-      {/* Hero Section */}
       <section className="relative h-screen flex items-center justify-start">
         <Image
           src="/img/home.jpg"
@@ -245,6 +276,103 @@ export default function Home() {
         "/img/bgOther.jpg",
         "Aucun autre événement disponible pour le moment."
       )}
+
+      <section className="relative py-16 px-6 text-blancGlacialNeutre">
+        <Image
+          src="/img/TicketsStats.jpg"
+          alt="Background Tickets Stats"
+          fill
+          className="object-cover"
+          quality={80}
+          priority
+        />
+
+        <div className="absolute inset-0 bg-black bg-opacity-70"></div>
+
+        <div className="relative z-10 container mx-auto">
+          <div className="text-center mb-12">
+            <h2 className="text-4xl font-bold mb-3">Statistiques des Billets</h2>
+            <p className="text-xl opacity-90 max-w-2xl mx-auto">
+              Découvrez la répartition des billets vendus par catégorie
+            </p>
+          </div>
+
+          {loading ? (
+            <div className="text-center py-12">
+              <div className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-orMetallique mr-3"></div>
+              <span>Chargement des données...</span>
+            </div>
+          ) : (
+            <div className="bg-blancGlacialNeutre bg-opacity-10 backdrop-blur-sm rounded-xl p-8 max-w-4xl mx-auto">
+              <div className="text-center mb-8">
+                <h3 className="text-2xl font-semibold mb-2">Total des billets vendus</h3>
+                <div className="text-5xl font-bold text-orMetallique">{total}</div>
+              </div>
+
+              <div className="flex flex-col md:flex-row items-center justify-between gap-12">
+                <div className="relative w-64 h-64">
+                  <div className="absolute inset-0 rounded-full border-8 border-bleuElec shadow-lg">
+                    {ticketStats.map((stat, index) => {
+                      const percentage = total > 0 ? (stat.count / total) * 100 : 0;
+                      const offset = ticketStats.slice(0, index).reduce((sum, s) => sum + (s.count / total) * 100, 0);
+
+                      return (
+                        <div
+                          key={stat.type}
+                          className="absolute inset-0 rounded-full"
+                          style={{
+                            background: `conic-gradient(
+                        ${stat.color} 0% ${percentage}%,
+                        transparent ${percentage}% 100%
+                      )`,
+                            transform: `rotate(${offset * 3.6}deg)`
+                          }}
+                        ></div>
+                      );
+                    })}
+                  </div>
+                  <div className="absolute inset-8 rounded-full bg-bleuNuit flex items-center justify-center shadow-inner">
+                    <span className="text-xl font-bold">{total}</span>
+                  </div>
+                </div>
+
+                <div className="flex-1">
+                  <h3 className="text-2xl font-semibold mb-4">Répartition par type</h3>
+                  <div className="space-y-4">
+                    {ticketStats.map(stat => {
+                      const percent = total > 0 ? Math.round((stat.count / total) * 100) : 0;
+                      return (
+                        <div key={stat.type} className="bg-bleuNuit bg-opacity-50 p-4 rounded-lg">
+                          <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center">
+                              <div
+                                className="w-5 h-5 rounded-full mr-3"
+                                style={{ backgroundColor: stat.color }}
+                              ></div>
+                              <span className="font-medium text-lg">{stat.type}</span>
+                            </div>
+                            <span className="font-bold">{stat.count}</span>
+                          </div>
+                          <div className="w-full bg-gray-700 rounded-full h-2.5">
+                            <div
+                              className="h-2.5 rounded-full"
+                              style={{
+                                width: `${percent}%`,
+                                backgroundColor: stat.color
+                              }}
+                            ></div>
+                          </div>
+                          <div className="text-right mt-1 text-sm">{percent}%</div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </section>
 
       <section className="relative py-12 px-6">
         <Image

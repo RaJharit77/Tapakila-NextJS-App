@@ -75,6 +75,7 @@ enum Status {
   SOLD
   RESERVED
 }
+
 enum EventStatus {
   CANCLED
   UPLOADED
