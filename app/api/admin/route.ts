@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import {sign, verify} from "jsonwebtoken";
 import { NextResponse } from "next/server";
+
 export async function POST(request: Request) {
   try {
     const { email, password } = await request.json();
@@ -25,7 +26,6 @@ export async function POST(request: Request) {
       );
     }
 
-    // const accessToken = crypto.randomUUID().split('-').join('');
     const accessToken = sign(
       { email: user.admin_mail, password: user.admin_password },
       process.env.JWT_SECRET!,
@@ -36,8 +36,8 @@ export async function POST(request: Request) {
       { accessToken, redirectTo: '/' },
       { status: 200 }
     );
-  } catch (error) {
-    console.error('Erreur lors de la connexion :', error);
+  } catch {
+    console.error('Erreur lors de la connexion');
     return NextResponse.json(
       { error: 'Erreur interne du serveur' },
       { status: 500 }
@@ -61,14 +61,14 @@ export async function GET(request: Request) {
         { authenticated: true, user: decoded },
         { status: 200 }
       );
-    } catch (error) {
+    } catch {
       return NextResponse.json(
         { authenticated: false, message: "Token Invalide" },
         { status: 401 }
       );
     }
-  } catch (error) {
-    console.error("Erreur lors de la vérification de l'authentification :", error);
+  } catch {
+    console.error("Erreur lors de la vérification de l'authentification");
     return NextResponse.json(
       { error: "Erreur interne du serveur" },
       { status: 500 }

@@ -1,22 +1,19 @@
 import { auth } from "@/app/api/auth/[...nextauth]/route";
 import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
 
-export default auth((req) => {
+const publicRoutes = new Set(["/", "/login", "/signup", "/about"]);
+
+export default auth((req: NextRequest & { auth?: any }) => {
     const { pathname } = new URL(req.url);
 
-    const publicRoutes = [
-        "/",
-        "/login",
-        "/signup",
-    ];
-
-    if (req.auth && publicRoutes.includes(pathname)) {
-        return NextResponse.redirect(new URL("/", req.url).toString(), 302);
+    if (req.auth && publicRoutes.has(pathname)) {
+        return NextResponse.redirect(new URL("/", req.url));
     }
 
     return NextResponse.next();
 });
 
 export const config = {
-    matcher: ["/((?!api|_next/static|_next/image|favicon.ico|login|signup|about|img).*)"],
+    matcher: ["/((?!api|_next/static|_next/image|favicon.ico|img).*)"],
 };
