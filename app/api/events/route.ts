@@ -26,45 +26,49 @@ interface EventPostData {
 export async function GET(request: Request) {
     try {
         const url = new URL(request.url);
-        const status = url.searchParams.get("status") as EventStatus | null;
-        const page = url.searchParams.get("page");
+        const status = url.searchParams.get('status');
+        const page = url.searchParams.get('page');
+        const pageSize = parseInt(url.searchParams.get('pageSize') || "10");
+        const category = url.searchParams.get('category');
         const name = url.searchParams.get("name");
         const location = url.searchParams.get("location");
         const date = url.searchParams.get("date");
 
-        const whereClause: EventWhereClause = {};
-
-        if (status) {
-            whereClause.event_status = status;
-        }
-
-        if (name) {
-            whereClause.event_name = { contains: name, mode: "insensitive" };
-        }
-
-        if (location) {
-            whereClause.event_place = { contains: location, mode: "insensitive" };
-        }
-
-        if (date) {
-            const [day, month, year] = date.split("/");
-            const formattedDate = new Date(`${year}-${month}-${day}`);
-            whereClause.event_date = {
-                gte: formattedDate,
-                lt: new Date(formattedDate.getTime() + 24 * 60 * 60 * 1000),
-            };
-        }
-
-        const events = await prisma.event.findMany({
-            where: whereClause,
+        
+        let events = await prisma.event.findMany({
             include: {
                 tickets: true,
             },
-            take: 10,
-            skip: page ? (parseInt(page) - 1) * 10 : 0,
+            take: pageSize ,
+            skip: page ? (parseInt(page) - 1) * pageSize : 0
         });
 
-        return NextResponse.json(events);
+        if(status || category || name || location || date){
+            events = await prisma.event.findMany({
+                where: {
+                    ...(category && { event_category: category }),
+                    ...(status && { event_status: status as EventStatus }),
+                    ...(name && { event_name: { contains: name, mode: "insensitive" } }),
+                    ...(location && { event_place: { contains: location, mode: "insensitive" } }),
+                    ...(date && {
+                        event_date: {
+                            gte: new Date(date),
+                            lt: new Date(new Date(date).getTime() + 24 * 60 * 60 * 1000),
+                        },
+                    })
+                },
+                include: {
+                    tickets: true,
+                }, 
+                take: pageSize,
+                skip: page ? (parseInt(page) - 1) * pageSize : 0
+            })
+        }
+
+        return new NextResponse(JSON.stringify(events), {
+            status: 200,
+            headers: { 'Content-Type': 'application/json' },
+        });
     } catch (error) {
         console.error("Error fetching events:", error);
         return NextResponse.json(
@@ -76,17 +80,36 @@ export async function GET(request: Request) {
     }
 }
 
+
+
+
+
+
+
+
 export async function POST(request: Request) {
     try {
-        const body: EventPostData = await request.json();
-        const { event_name, event_place, event_category, event_date, admin_id } = body;
+        const body = await request.json()
+        const { event_name, event_place, event_category, event_date, event_description, event_organizer, event_image, admin_id } = body
+        const admin = await prisma.admin.findUnique({
+            where:{
+                admin_id : admin_id
+            }
+        }) 
+
 
         if (!event_name || !event_place || !event_category || !event_date || !admin_id) {
-            return NextResponse.json(
-                { error: "Required fields are missing" },
-                { status: 400 }
-            );
+            return new NextResponse(JSON.stringify({ error: 'those field must be filled! ' }, ), {status: 400})
         }
+
+        if(admin_id != admin?.admin_id){
+            return new NextResponse(JSON.stringify({ error: 'Invalid admin' }), {status: 400})
+        }
+        if(isNaN(new Date(event_date).getTime())){
+            return new NextResponse(JSON.stringify({ error: 'Invalid date, please use YYYY-MM-DD' }), {status: 400})
+        }
+        
+        else {
 
         let status: EventStatus = "UPLOADED";
         const lastCreatedEvent = await prisma.event.findFirst({
@@ -103,14 +126,15 @@ export async function POST(request: Request) {
         if (!body.event_category || !body.event_image || !body.event_description) {
             status = "DRAFT";
         }
-
+        const [year, month, day] = event_date.split('/');
+        const date = new Date(`${year}-${month}-${day}`); 
         const newEvent = await prisma.event.create({
             data: {
                 event_id,
                 event_name,
                 event_place,
                 event_category,
-                event_date: new Date(event_date),
+                event_date: date,
                 event_description: body.event_description,
                 event_image: body.event_image,
                 event_organizer: body.event_organizer ?? "",
@@ -121,7 +145,7 @@ export async function POST(request: Request) {
         });
 
         return NextResponse.json(newEvent, { status: 201 });
-    } catch (error) {
+    }} catch (error) {
         console.error("Error while creating the event:", error);
         return NextResponse.json(
             { error: "Internal server error" },
