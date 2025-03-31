@@ -52,9 +52,24 @@ export async function POST(request: Request) {
     try {
         const body = await request.json()
         const { event_name, event_place, event_category, event_date, event_description, event_organizer, event_image, admin_id } = body
-        if (!event_name || !event_place || !event_category || !event_date) {
-            return new NextResponse(JSON.stringify({ error: 'those field must be filled! ' }))
+        const admin = await prisma.admin.findUnique({
+            where:{
+                admin_id : admin_id
+            }
+        }) 
+
+
+        if (!event_name || !event_place || !event_category || !event_date || !admin_id) {
+            return new NextResponse(JSON.stringify({ error: 'those field must be filled! ' }, ), {status: 400})
         }
+
+        if(admin_id != admin?.admin_id){
+            return new NextResponse(JSON.stringify({ error: 'Invalid admin' }), {status: 400})
+        }
+        if(isNaN(new Date(event_date).getTime())){
+            return new NextResponse(JSON.stringify({ error: 'Invalid date' }), {status: 400})
+        }
+        
         else {
 
             let status = "UPLOADED" as EventStatus
