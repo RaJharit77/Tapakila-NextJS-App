@@ -43,7 +43,7 @@ export async function GET(request: Request) {
             skip: page ? (parseInt(page) - 1) * pageSize : 0
         });
 
-        if(status || category){
+        if(status || category || name || location || date){
             events = await prisma.event.findMany({
                 where: {
                     ...(category && { event_category: category }),
