@@ -143,7 +143,6 @@ export async function POST(request: Request) {
                 event_status: status,
             },
         });
-        console.log(date)
 
         return NextResponse.json(newEvent, { status: 201 });
     }} catch (error) {
