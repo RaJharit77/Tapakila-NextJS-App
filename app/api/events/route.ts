@@ -8,7 +8,7 @@ export async function GET(request: Request) {
         const status = url.searchParams.get('status');
         const page = url.searchParams.get('page');
         const pageSize = parseInt(url.searchParams.get('pageSize') || "10");
-        
+        const category = url.searchParams.get('category');
         
         let events = await prisma.event.findMany({
             include: {
@@ -19,10 +19,11 @@ export async function GET(request: Request) {
             skip: page ? (parseInt(page) - 1) * pageSize : 0
         });
 
-        if(status){
+        if(status || category){
             events = await prisma.event.findMany({
                 where: {
-                    event_status: status as EventStatus
+                    ...(category && { event_category: category }),
+                    ...(status && { event_status: status as EventStatus })
                 },
                 include: {
                     tickets: true,
