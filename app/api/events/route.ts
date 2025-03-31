@@ -127,7 +127,7 @@ export async function POST(request: Request) {
             status = "DRAFT";
         }
         const [year, month, day] = event_date.split('/');
-        const date = new Date(`${year}-${month}-${day}`); // "2000-10-02" → 2 octobre
+        const date = new Date(`${year}-${month}-${day}`); 
         const newEvent = await prisma.event.create({
             data: {
                 event_id,
