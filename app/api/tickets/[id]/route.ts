@@ -29,6 +29,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
 }
 
 
+
 export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
     try{
         const body = await request.json()
