@@ -116,7 +116,7 @@ export default function EventsPage() {
                         </section>
                     ))
                 ) : (
-                    <div className="text-center text-blancGlacialNeutre text-xl">
+                    <div className="text-center text-blancGlacialNeutre text-xl mt-44">
                         Aucun événement trouvé pour votre recherche.
                     </div>
                 )}
