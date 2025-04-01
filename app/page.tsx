@@ -332,7 +332,7 @@ export default function Home() {
                     })}
                   </div>
                   <div className="absolute inset-8 rounded-full bg-bleuNuit flex items-center justify-center shadow-inner">
-                    <span className="text-xl font-bold">{total}</span>
+                    <span className="text-5xl font-bold">{total}</span>
                   </div>
                 </div>
 

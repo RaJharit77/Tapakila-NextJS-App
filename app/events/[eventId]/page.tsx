@@ -7,6 +7,7 @@ import { toast } from "react-hot-toast";
 import { useEffect, useState } from "react";
 import { FaArrowLeft, FaTicketAlt } from "react-icons/fa";
 import TicketTable from "@/components/TicketTable";
+import { useSession } from "next-auth/react";
 
 interface Event {
     event_id: string;
@@ -29,6 +30,7 @@ export default function EventPage() {
     const [loading, setLoading] = useState<boolean>(true);
     const { eventId } = useParams() as { eventId: string };
     const router = useRouter();
+    const { data: session, status } = useSession();
 
     useEffect(() => {
         async function fetchEvent() {
@@ -56,18 +58,21 @@ export default function EventPage() {
         fetchEvent();
     }, [eventId]);
 
-    const handleReservationClick = () => {
-        const user = localStorage.getItem("user");
-
-        if (!user) {
+    const handleReservationClick = (e: React.MouseEvent) => {
+        if (!session) {
+            e.preventDefault();
             toast.error("Veuillez vous connecter ou créer un compte pour réserver", {
-                duration: 3000,
+                duration: 4000,
                 position: "top-center",
                 style: {
                     backgroundColor: "#f87171",
                     color: "#fff",
                 },
                 icon: "🔒",
+                ariaProps: {
+                    role: 'status',
+                    'aria-live': 'polite',
+                },
             });
         }
     };
@@ -182,14 +187,17 @@ export default function EventPage() {
                                 }))}
                             />
 
-                            <Link
+                            <button
                                 onClick={handleReservationClick}
-                                href={`/dashboard/reservations`}
-                                className="mt-6 w-full bg-bleuElec text-blancCasse px-4 py-2 rounded-lg hover:bg-bleuNuit transition-colors flex items-center justify-center"
+                                className={`mt-6 w-full px-4 py-2 rounded-lg flex items-center justify-center ${
+                                    session 
+                                        ? "bg-bleuElec text-blancCasse hover:text-orMetallique hover:bg-bleuNuit"
+                                        : "bg-bleuElec text-blancGlacialNeutre cursor-not-allowed"
+                                } transition-colors`}
                             >
                                 <FaTicketAlt className="mr-2" />
-                                Réserver
-                            </Link>
+                                {session ? "Réserver" : "Connectez-vous pour réserver"}
+                            </button>
                         </div>
                     </div>
                 </div>
