@@ -10,7 +10,8 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
                 user_id: id
             },
             include:{
-                tickets: true
+                tickets: true,
+                messages: true
             }
         })
         return new NextResponse(JSON.stringify(user), { status: 200, headers: { 'Content-Type': 'application/json' } })
