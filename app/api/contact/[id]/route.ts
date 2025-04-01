@@ -27,3 +27,34 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
         await prisma.$disconnect()
     }
 }
+export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
+
+    try{
+        const  {id} = await params
+        const foudMessage = await prisma.message.findUnique({
+            where:{
+                message_id: id
+            }
+        })
+        if(foudMessage){
+            const deleted = await prisma.message.delete({
+                where: {
+                    message_id : id
+                }
+            })
+
+            return new NextResponse(JSON.stringify(deleted), {status: 200})
+        }else{
+            return new NextResponse(JSON.stringify({error : "Message not found"}), {status: 404})
+        }
+
+
+    } catch (e) {
+        console.error("Error finding the message ", e)
+        return new NextResponse(JSON.stringify({ error: "Repository erro" }),
+            { status: 500 }
+        )
+    } finally {
+        await prisma.$disconnect()
+    }
+}

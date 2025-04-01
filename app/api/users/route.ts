@@ -14,7 +14,8 @@ export async function GET(request: Request) {
             take: pageSize,
             skip: offset,
             include: {
-                tickets: true
+                tickets: true,
+                messages: true
             }
         });
 
