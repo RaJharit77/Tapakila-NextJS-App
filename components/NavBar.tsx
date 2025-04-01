@@ -14,7 +14,8 @@ export default function Navbar() {
     const [isSearchOpen, setIsSearchOpen] = useState(false);
     const [isLoggedIn, setIsLoggedIn] = useState(false);
     const [userName, setUserName] = useState<string | null>(null);
-    const [searchType, setSearchType] = useState<"name" | "location" | "date">("name");
+    const [searchType, setSearchType] = useState<"name" | "location" | "date" | "category">("name");
+    const [categories, setCategories] = useState<string[]>([]);
     const router = useRouter();
 
     useEffect(() => {
@@ -36,24 +37,42 @@ export default function Navbar() {
             setIsLoggedIn(true);
             setUserName(user.name);
         }
+
+        async function fetchCategories() {
+            try {
+                const response = await fetch('/api/events');
+                if (response.ok) {
+                    const events = await response.json();
+                    const uniqueCategories = [...new Set(events.map((event: any) => event.event_category || 'Autres'))] as string[];
+                    setCategories(uniqueCategories.filter(Boolean));
+                }
+            } catch (error) {
+                console.error("Error fetching categories:", error);
+            }
+        }
+        fetchCategories();
     }, []);
 
     const handleSearchSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-    if (searchValue.trim()) {
-        if (searchType === "date") {
-            const dateRegex = /^\d{2}\/\d{2}\/\d{4}$/;
-            if (!dateRegex.test(searchValue)) {
-                alert("Veuillez entrer une date au format JJ/MM/AAAA");
-                return;
+        if (searchValue.trim()) {
+            if (searchType === "date") {
+                const dateRegex = /^\d{2}\/\d{2}\/\d{4}$/;
+                if (!dateRegex.test(searchValue)) {
+                    alert("Veuillez entrer une date au format JJ/MM/AAAA");
+                    return;
+                }
+                const [day, month, year] = searchValue.split('/');
+                const formattedDate = `${year}-${month}-${day}`;
+                router.push(`/events?date=${formattedDate}`);
+            } else {
+                router.push(`/events?${searchType}=${encodeURIComponent(searchValue)}`);
             }
-            const [day, month, year] = searchValue.split('/');
-            const formattedDate = `${year}-${month}-${day}`;
-            router.push(`/events?date=${formattedDate}`);
-        } else {
-            router.push(`/events?${searchType}=${encodeURIComponent(searchValue)}`);
         }
-    }
+    };
+
+    const handleCategorySelect = (category: string) => {
+        router.push(`/events?category=${encodeURIComponent(category)}`);
     };
 
     const handleLogout = () => {
@@ -102,28 +121,48 @@ export default function Navbar() {
                         <div className="relative">
                             <select
                                 value={searchType}
-                                onChange={(e) => setSearchType(e.target.value as "name" | "location" | "date")}
+                                onChange={(e) => setSearchType(e.target.value as "name" | "location" | "date" | "category")}
                                 className="bg-blancGlacialNeutre text-gray-500 rounded-xl px-3 py-1 text-sm focus:outline-none"
                             >
                                 <option value="name">Nom</option>
                                 <option value="location">Lieu</option>
                                 <option value="date">Date</option>
+                                <option value="category">Catégorie</option>
                             </select>
                         </div>
                         <FaSearch className="text-gray-500 ml-2" />
-                        <input
-                            type="text"
-                            placeholder={
-                                searchType === "name" ? "Rechercher par nom..." :
-                                searchType === "location" ? "Rechercher par lieu..." :
-                                "Rechercher par date..."
-                            }
-                            className="ml-2 bg-transparent outline-none w-full"
-                            onFocus={() => setIsSearchFocused(true)}
-                            onBlur={() => setIsSearchFocused(false)}
-                            onChange={(e) => setSearchValue(e.target.value)}
-                            value={searchValue}
-                        />
+                        {searchType === "category" ? (
+                            <select
+                                value={searchValue}
+                                onChange={(e) => {
+                                    setSearchValue(e.target.value);
+                                    handleCategorySelect(e.target.value);
+                                }}
+                                className="ml-2 bg-transparent outline-none w-full"
+                            >
+                                <option value="">Toutes catégories</option>
+                                {categories.map((category) => (
+                                    <option key={category} value={category}>
+                                        {category}
+                                    </option>
+                                ))}
+                            </select>
+                        ) : (
+                            <input
+                                type={searchType === "date" ? "text" : "text"}
+                                placeholder={
+                                    searchType === "name" ? "Rechercher par nom..." :
+                                    searchType === "location" ? "Rechercher par lieu..." :
+                                    searchType === "date" ? "Rechercher par date (JJ/MM/AAAA)..." :
+                                    "Sélectionner une catégorie..."
+                                }
+                                className="ml-2 bg-transparent outline-none w-full"
+                                onFocus={() => setIsSearchFocused(true)}
+                                onBlur={() => setIsSearchFocused(false)}
+                                onChange={(e) => setSearchValue(e.target.value)}
+                                value={searchValue}
+                            />
+                        )}
                     </form>
 
                     <div className="lg:hidden flex items-center">
@@ -203,29 +242,48 @@ export default function Navbar() {
                         >
                             <select
                                 value={searchType}
-                                onChange={(e) => setSearchType(e.target.value as "name" | "location" | "date")}
+                                onChange={(e) => setSearchType(e.target.value as "name" | "location" | "date" | "category")}
                                 className="bg-bleuNuit text-blancGlacialNeutre rounded-lg px-2 py-1 text-sm focus:outline-none"
                             >
                                 <option value="name">Nom</option>
                                 <option value="location">Lieu</option>
                                 <option value="date">Date</option>
+                                <option value="category">Catégorie</option>
                             </select>
-                            <div className="flex items-center">
-                                <FaSearch className="text-gray-500" />
-                                <input
-                                    type="text"
-                                    placeholder={
-                                        searchType === "name" ? "Rechercher par nom..." :
-                                        searchType === "location" ? "Rechercher par lieu..." :
-                                        "Rechercher par date (JJ/MM/AAAA)..."
-                                    }
-                                    className="ml-2 bg-transparent outline-none w-full"
-                                    onFocus={() => setIsSearchFocused(true)}
-                                    onBlur={() => setIsSearchFocused(false)}
-                                    onChange={(e) => setSearchValue(e.target.value)}
+                            {searchType === "category" ? (
+                                <select
                                     value={searchValue}
-                                />
-                            </div>
+                                    onChange={(e) => {
+                                        setSearchValue(e.target.value);
+                                        handleCategorySelect(e.target.value);
+                                    }}
+                                    className="bg-bleuNuit text-blancGlacialNeutre rounded-lg px-2 py-1 text-sm focus:outline-none"
+                                >
+                                    <option value="">Toutes catégories</option>
+                                    {categories.map((category) => (
+                                        <option key={category} value={category}>
+                                            {category}
+                                        </option>
+                                    ))}
+                                </select>
+                            ) : (
+                                <div className="flex items-center">
+                                    <FaSearch className="text-gray-500" />
+                                    <input
+                                        type={searchType === "date" ? "text" : "text"}
+                                        placeholder={
+                                            searchType === "name" ? "Rechercher par nom..." :
+                                            searchType === "location" ? "Rechercher par lieu..." :
+                                            "Rechercher par date (JJ/MM/AAAA)..."
+                                        }
+                                        className="ml-2 bg-transparent outline-none w-full"
+                                        onFocus={() => setIsSearchFocused(true)}
+                                        onBlur={() => setIsSearchFocused(false)}
+                                        onChange={(e) => setSearchValue(e.target.value)}
+                                        value={searchValue}
+                                    />
+                                </div>
+                            )}
                         </form>
                     </div>
                 )}

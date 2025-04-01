@@ -292,9 +292,6 @@ export default function Home() {
         <div className="relative z-10 container mx-auto">
           <div className="text-center mb-12">
             <h2 className="text-4xl font-bold mb-3">Statistiques des Billets</h2>
-            <p className="text-xl opacity-90 max-w-2xl mx-auto">
-              Découvrez la répartition des billets vendus par catégorie
-            </p>
           </div>
 
           {loading ? (

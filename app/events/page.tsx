@@ -32,6 +32,7 @@ export default function EventsPage() {
     const nameQuery = searchParams.get("name") || "";
     const locationQuery = searchParams.get("location") || "";
     const dateQuery = searchParams.get("date") || "";
+    const categoryQuery = searchParams.get("category") || "";
 
     useEffect(() => {
         async function fetchEvents() {
@@ -42,6 +43,7 @@ export default function EventsPage() {
                 if (nameQuery) params.append("name", nameQuery);
                 if (locationQuery) params.append("location", locationQuery);
                 if (dateQuery) params.append("date", dateQuery);
+                if (categoryQuery) params.append("category", categoryQuery);
 
                 if (params.toString()) url += `?${params.toString()}`;
 
@@ -67,7 +69,7 @@ export default function EventsPage() {
             }
         }
         fetchEvents();
-    }, [setEvents, nameQuery, locationQuery, dateQuery]);
+    }, [setEvents, nameQuery, locationQuery, dateQuery, categoryQuery]);
 
     const eventsByCategory = events.reduce((acc: Record<string, Event[]>, event) => {
         if (!acc[event.category]) {
