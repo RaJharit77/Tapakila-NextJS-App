@@ -6,7 +6,6 @@ import { toast } from "react-hot-toast";
 import { useEffect, useState } from "react";
 import { FaArrowLeft, FaTicketAlt } from "react-icons/fa";
 import TicketTable from "@/components/TicketTable";
-import { useSession } from "next-auth/react";
 
 interface Event {
     event_id: string;
@@ -27,11 +26,14 @@ export default function EventPage() {
     const [event, setEvent] = useState<Event | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState<boolean>(true);
+    const [isLoggedIn, setIsLoggedIn] = useState(false);
     const { eventId } = useParams() as { eventId: string };
     const router = useRouter();
-    const { data: session, status } = useSession();
 
     useEffect(() => {
+        const user = localStorage.getItem("user");
+        setIsLoggedIn(!!user);
+
         async function fetchEvent() {
             if (!eventId) {
                 setError("Event ID is missing");
@@ -57,10 +59,9 @@ export default function EventPage() {
         fetchEvent();
     }, [eventId]);
 
-    const handleReservationClick = (e: React.MouseEvent) => {
-        if (!session) {
-            e.preventDefault();
-            toast.error("Veuillez vous connecter ou créer un compte pour réserver", {
+    const handleReservationClick = () => {
+        if (!isLoggedIn) {
+            toast.error("Veuillez vous connecter pour effectuer une réservation", {
                 duration: 4000,
                 position: "top-center",
                 style: {
@@ -73,7 +74,10 @@ export default function EventPage() {
                     'aria-live': 'polite',
                 },
             });
+            return;
         }
+
+        router.push(`/dashboard/reservations?eventId=${eventId}`);
     };
 
     if (loading) {
@@ -126,8 +130,8 @@ export default function EventPage() {
             />
             <div className="absolute inset-0 bg-black bg-opacity-70 pointer-events-none"></div>
 
-            <div className="relative z-10">
-                <div className="max-w-4xl mx-auto bg-blancCasse rounded-lg shadow-lg p-8">
+            <div className="relative z-10 flex justify-center">
+                <div className="w-full max-w-3xl bg-blancCasse rounded-lg shadow-lg p-8">
                     <button
                         onClick={() => router.back()}
                         className="mb-6 flex items-center text-bleuNuit hover:text-bleuElec transition-colors"
@@ -136,17 +140,21 @@ export default function EventPage() {
                         Retour
                     </button>
 
-                    <div className="w-full h-[400px] sm:h-[500px] lg:h-[600px] relative overflow-hidden rounded-xl mb-8">
-                        <Image
-                            src={event.event_image}
-                            alt={event.event_name}
-                            fill
-                            className="object-cover object-center"
-                            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                        />
+                    <div className="w-full h-[400px] sm:h-[500px] relative mb-8">
+                        <div className="relative w-full h-full rounded-xl overflow-hidden">
+                            <Image
+                                src={event.event_image}
+                                alt={event.event_name}
+                                fill
+                                className="object-contain"
+                                style={{ objectPosition: 'center' }}
+                                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                                priority
+                            />
+                        </div>
                     </div>
 
-                    <h1 className="text-4xl font-bold text-bleuNuit mb-6">
+                    <h1 className="text-3xl font-bold text-bleuNuit mb-6">
                         {event.event_name}
                     </h1>
                     <p className="text-lg text-grisAnthracite mb-8">
@@ -156,16 +164,23 @@ export default function EventPage() {
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                         <div>
                             <div className="mb-6">
-                                <h2 className="text-2xl font-semibold text-bleuNuit mb-2">
+                                <h2 className="text-xl font-semibold text-bleuNuit mb-2">
                                     Date et Heure
                                 </h2>
                                 <p className="text-grisAnthracite">
-                                    {new Date(event.event_date).toLocaleDateString()} -{" "}
-                                    {new Date(event.event_date).toLocaleTimeString()}
+                                    {new Date(event.event_date).toLocaleDateString('fr-FR', {
+                                        day: 'numeric',
+                                        month: 'long',
+                                        year: 'numeric'
+                                    })} -{" "}
+                                    {new Date(event.event_date).toLocaleTimeString('fr-FR', {
+                                        hour: '2-digit',
+                                        minute: '2-digit'
+                                    })}
                                 </p>
                             </div>
                             <div className="mb-6">
-                                <h2 className="text-2xl font-semibold text-bleuNuit mb-2">
+                                <h2 className="text-xl font-semibold text-bleuNuit mb-2">
                                     Lieu
                                 </h2>
                                 <p className="text-grisAnthracite">{event.event_place}</p>
@@ -173,7 +188,7 @@ export default function EventPage() {
                         </div>
 
                         <div>
-                            <h2 className="text-2xl font-semibold text-bleuNuit mb-6">
+                            <h2 className="text-xl font-semibold text-bleuNuit mb-6">
                                 Billets Disponibles
                             </h2>
 
@@ -188,14 +203,14 @@ export default function EventPage() {
 
                             <button
                                 onClick={handleReservationClick}
-                                className={`mt-6 w-full px-4 py-2 rounded-lg flex items-center justify-center ${
-                                    session 
-                                        ? "bg-bleuElec text-blancCasse hover:text-orMetallique hover:bg-bleuNuit"
+                                className={`mt-6 w-full px-4 py-3 rounded-lg flex items-center justify-center ${
+                                    isLoggedIn 
+                                        ? "bg-bleuElec text-blancCasse hover:bg-bleuNuit hover:text-orMetallique transition-colors"
                                         : "bg-bleuElec text-blancGlacialNeutre cursor-not-allowed"
-                                } transition-colors`}
+                                }`}
                             >
                                 <FaTicketAlt className="mr-2" />
-                                {session ? "Réserver" : "Connectez-vous pour réserver"}
+                                {isLoggedIn ? "Réserver maintenant" : "Connectez-vous pour réserver"}
                             </button>
                         </div>
                     </div>
