@@ -13,18 +13,28 @@ export async function getData() {
     return data;
 }
 
-export async function BookATicket({ data }: { data: { userId: string, ticketNumber: number, requestType: "CANCEL" | "BOOK", ticketType: Type } }) {
+export async function BookATicket({ data }: { data: { userId: string, ticketNumber: number, requestType: "CANCEL" | "BOOK", ticketType: Type , eventId : string } }) {
     try {
-        const { userId, ticketNumber, ticketType, requestType } = data
+        const { userId, ticketNumber, ticketType, requestType, eventId } = data
 
 
         if (requestType == "BOOK") {
+            const event = await prisma.event.findUnique({
+                where:{
+                    event_id : eventId
+                }
+            })
+
+            if((event?.event_tickets_limit_by_user_by_type ?? 5) < ticketNumber){
+                return new Response(JSON.stringify({ message: "you can't book more than the limit" }))
+            }
 
             const foundTickets = await prisma.ticket.findMany({
                 take: ticketNumber,
                 where: {
                     ticket_status: "AVAILABLE",
-                    ticket_type: ticketType
+                    ticket_type: ticketType,
+                    event_id : eventId
                 }
             })
 
