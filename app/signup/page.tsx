@@ -23,14 +23,11 @@ function SignupPage() {
                 body: JSON.stringify({ name, email, password }),
             });
 
-           
             if (!res.ok) {
                 const data = await res.json();
                 setErrorMessage(data.message || "Erreur lors de l'inscription.");
                 return;
             }
-            // window.location.href = "/login";
-
 
         } catch {
             setErrorMessage("Erreur lors de l'inscription. Veuillez réessayer.");
