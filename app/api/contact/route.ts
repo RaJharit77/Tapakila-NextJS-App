@@ -10,30 +10,55 @@ export async function POST(request: Request) {
 
         if (!subject || !message) {
             return NextResponse.json(
-                { error: 'Tous les champs sont requis.' },
+                { error: 'Subject and message are required.' },
                 { status: 400 }
             );
         }
 
-        const idMessage = "M" + randomUUID().replace(/-/g, '');
+        const userExists = await prisma.user.findUnique({
+            where: { user_id }
+        });
 
-        const content = await prisma.message.create({
+        if (!userExists) {
+            return NextResponse.json(
+                { error: 'User not found.' },
+                { status: 404 }
+            );
+        }
+
+        const messageId = "MSG" + randomUUID().replace(/-/g, '').substring(0, 12);
+
+        const newMessage = await prisma.message.create({
             data: {
-                message_id: idMessage,
-                message_date: new Date(),
-                message_content: message,
+                message_id: messageId,
                 message_subject: subject,
-                user_id: user_id,
+                message_content: message,
+                message_date: new Date(),
+                user_id: user_id
             },
-        })
+            include: {
+                user: {
+                    select: {
+                        user_name: true,
+                        user_email: true
+                    }
+                }
+            }
+        });
 
-        return NextResponse.json(content, { status: 201 });
+        return NextResponse.json({
+            message: "Message sent successfully",
+            data: newMessage
+        }, { status: 201 });
 
     } catch (error) {
-        console.error('Error while sending the review:', error);
-        return NextResponse.json({ error: 'Erreur serveur.' }, { status: 500 });
+        console.error('Error while sending message:', error);
+        return NextResponse.json(
+            { error: 'Internal server error' },
+            { status: 500 }
+        );
     } finally {
-        await prisma.$disconnect()
+        await prisma.$disconnect();
     }
 }
 
