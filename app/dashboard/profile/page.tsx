@@ -24,6 +24,8 @@ interface User {
     user_name: string;
     user_email: string;
     user_first_login_date: string;
+    user_address?: string;
+    user_city?: string;
     tickets?: Ticket[];
 }
 
@@ -58,8 +60,8 @@ const ProfilePage = () => {
                 const userId = parsedUser.id || parsedUser.user_id;
 
                 const isFirstLogin = !parsedUser.user_first_login_date;
-                const loginDate = isFirstLogin 
-                    ? new Date().toISOString() 
+                const loginDate = isFirstLogin
+                    ? new Date().toISOString()
                     : parsedUser.user_first_login_date;
 
                 if (isFirstLogin) {
@@ -105,6 +107,8 @@ const ProfilePage = () => {
                     user_name: parsedUser.user_name || parsedUser.name || "",
                     user_email: parsedUser.user_email || parsedUser.email || "",
                     user_first_login_date: loginDate,
+                    user_address: parsedUser.user_address,
+                    user_city: parsedUser.user_city,
                     tickets
                 });
             } catch (error) {
@@ -152,6 +156,20 @@ const ProfilePage = () => {
                     </div>
                     <div className="space-y-4">
                         <div>
+                            <label className="block text-sm font-medium text-orMetallique">Adresse</label>
+                            <p className="mt-1 text-lg text-blancCasse">
+                                {user.user_address || "Non renseignée"}
+                            </p>
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-orMetallique">Ville</label>
+                            <p className="mt-1 text-lg text-blancCasse">
+                                {user.user_city || "Non renseignée"}
+                            </p>
+                        </div>
+                    </div>
+                    <div className="space-y-4">
+                        <div>
                             <label className="block text-sm font-medium text-orMetallique">Date d'adhésion</label>
                             <p className="mt-1 text-lg text-blancCasse">
                                 {new Date(user.user_first_login_date).toLocaleDateString('fr-FR', {
@@ -175,7 +193,7 @@ const ProfilePage = () => {
                         <FaTicketAlt className="mr-2" />
                         Mes billets
                     </h2>
-                    
+
                     {Object.keys(ticketSummary).length > 0 ? (
                         <div className="space-y-6">
                             {Object.entries(ticketSummary).map(([key, summary]) => (
@@ -199,7 +217,7 @@ const ProfilePage = () => {
                                                     minute: '2-digit'
                                                 })}
                                             </p>
-                                            
+
                                             <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
                                                 <div className="bg-bleuNuit bg-opacity-70 p-3 rounded-lg">
                                                     <p className="text-sm text-orMetallique">Type</p>
@@ -220,7 +238,7 @@ const ProfilePage = () => {
                                                     </p>
                                                 </div>
                                             </div>
-                                            
+
                                             <div className="mt-4 bg-bleuElec bg-opacity-70 p-3 rounded-lg">
                                                 <p className="text-sm text-orMetallique">Nombre de billets</p>
                                                 <p className="text-xl font-bold text-blancCasse">

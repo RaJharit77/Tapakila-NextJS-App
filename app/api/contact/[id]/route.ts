@@ -27,6 +27,33 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
         await prisma.$disconnect()
     }
 }
+
+export async function PUT(request: Request, { params }: { params: { id: string } }) {
+    try {
+        const body = await request.json();
+        const { id } = params;
+
+        const updatedUser = await prisma.user.update({
+            where: { user_id: id },
+            data: {
+                user_name: body.user_name,
+                user_address: body.user_address,
+                user_city: body.user_city
+            }
+        });
+
+        return new NextResponse(JSON.stringify(updatedUser), { status: 200 });
+    } catch (e) {
+        console.error("Error updating user:", e);
+        return new NextResponse(
+            JSON.stringify({ error: "Repository error" }),
+            { status: 500 }
+        );
+    } finally {
+        await prisma.$disconnect();
+    }
+}
+
 export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
 
     try{
