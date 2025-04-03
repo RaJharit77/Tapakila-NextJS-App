@@ -37,7 +37,7 @@
 // }
 
 // -- This is a parent command --
-Cypress.Commands.add('login', (email: string, password: string) => {
+Cypress.Commands.add('login', (email: string, password: string): Cypress.Chainable<void> => {
   cy.visit('/login');
   cy.get('input[name="email"]').type(email);
   cy.get('input[name="password"]').type(password);

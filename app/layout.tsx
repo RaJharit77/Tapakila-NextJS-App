@@ -9,6 +9,8 @@ import { ToastProvider } from "@/components/ToastProvider";
 import "react-toastify/dist/ReactToastify.css";
 import { Toaster } from 'react-hot-toast';
 import Providers from "./providers";
+import { Metadata } from "next";
+import EventNotifications from "@/components/EventNotification";
 
 const poppins = Poppins({
   subsets: ["latin"],
@@ -26,6 +28,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en" className={poppins.className}>
       <body>
+        <EventNotifications />
         <Providers>
           <div>
             <Navbar />
