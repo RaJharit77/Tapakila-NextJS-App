@@ -77,6 +77,7 @@ export default function Navbar() {
 
     const handleLogout = () => {
         localStorage.removeItem("user");
+        localStorage.removeItem("user_id");
         setIsLoggedIn(false);
         setUserName(null);
         router.push("/login");
@@ -152,9 +153,9 @@ export default function Navbar() {
                                 type={searchType === "date" ? "text" : "text"}
                                 placeholder={
                                     searchType === "name" ? "Rechercher par nom..." :
-                                    searchType === "location" ? "Rechercher par lieu..." :
-                                    searchType === "date" ? "Rechercher par date (JJ/MM/AAAA)..." :
-                                    "Sélectionner une catégorie..."
+                                        searchType === "location" ? "Rechercher par lieu..." :
+                                            searchType === "date" ? "Rechercher par date (JJ/MM/AAAA)..." :
+                                                "Sélectionner une catégorie..."
                                 }
                                 className="ml-2 bg-transparent outline-none w-full"
                                 onFocus={() => setIsSearchFocused(true)}
@@ -192,7 +193,7 @@ export default function Navbar() {
                             Accueil
                         </Link>
                         <Link
-                            href="/events" 
+                            href="/events"
                             className="text-blancGlacialNeutre hover:text-transparent hover:bg-clip-text hover:bg-gradient-to-r from-bleuElec to-orMetallique transition-all duration-300 hover-neon underline-uncurved"
                         >
                             Événements
@@ -273,8 +274,8 @@ export default function Navbar() {
                                         type={searchType === "date" ? "text" : "text"}
                                         placeholder={
                                             searchType === "name" ? "Rechercher par nom..." :
-                                            searchType === "location" ? "Rechercher par lieu..." :
-                                            "Rechercher par date (JJ/MM/AAAA)..."
+                                                searchType === "location" ? "Rechercher par lieu..." :
+                                                    "Rechercher par date (JJ/MM/AAAA)..."
                                         }
                                         className="ml-2 bg-transparent outline-none w-full"
                                         onFocus={() => setIsSearchFocused(true)}

@@ -15,7 +15,11 @@ const {
   auth,
 } = NextAuth({
   ...authConfig,
-  session: { strategy: "jwt" },
+  session: {
+    strategy: "jwt", 
+    maxAge: 30 * 24 * 60 * 60,
+    updateAge: 24 * 60 * 60,
+  },
   providers: [
     ...authConfig.providers,
     Credentials({

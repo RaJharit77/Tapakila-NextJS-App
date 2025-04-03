@@ -1,6 +1,7 @@
 import Footer from "@/components/Footer";
 import Navbar from "@/components/NavBar";
 import "@/styles/globals.css";
+import { NextUIProvider } from "@nextui-org/react";
 import { Analytics } from '@vercel/analytics/next';
 import { Poppins } from "next/font/google";
 import { ReactNode } from "react";
@@ -26,7 +27,8 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en" className={poppins.className}>
       <body>
-        <SessionProvider>
+        <SessionProvider refetchInterval={5 * 60} refetchOnWindowFocus={true}>
+        <NextUIProvider>
           <div>
             <Navbar />
             <main className="pt-0">
@@ -38,6 +40,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
             </main>
             <Footer />
           </div>
+          </NextUIProvider>
         </SessionProvider>
       </body>
     </html>

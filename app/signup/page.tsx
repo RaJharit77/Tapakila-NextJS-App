@@ -23,39 +23,50 @@ function SignupPage() {
                 body: JSON.stringify({ name, email, password }),
             });
 
-           
             if (!res.ok) {
                 const data = await res.json();
                 setErrorMessage(data.message || "Erreur lors de l'inscription.");
                 return;
             }
-            // window.location.href = "/login";
 
+            const signupData = await res.json();
 
-        } catch {
-            setErrorMessage("Erreur lors de l'inscription. Veuillez réessayer.");
-        }
-
-        try {
-            const res = await fetch("/api/auth/login", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({ email, password }),
-            });
-
-            if (!res.ok) {
-                const data = await res.json();
-                setErrorMessage(data.message || "Erreur lors de la connexion");
+            if (signupData.error) {
+                setErrorMessage(signupData.error);
                 return;
             }
 
-            const data = await res.json();
-            localStorage.setItem("user", JSON.stringify(data.user));
-            window.location.href = "/dashboard/profile";
+            try {
+                const loginRes = await fetch("/api/auth/login", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({ email, password }),
+                });
+
+                if (!loginRes.ok) {
+                    const data = await loginRes.json();
+                    setErrorMessage(data.message || "Erreur lors de la connexion");
+                    return;
+                }
+
+                const loginData = await loginRes.json();
+
+                localStorage.setItem("user", JSON.stringify({
+                    id: loginData.user.id,
+                    name: loginData.user.name,
+                    email: loginData.user.email
+                }));
+
+                localStorage.setItem("user_id", loginData.user.id);
+
+                window.location.href = "/dashboard/profile";
+            } catch {
+                setErrorMessage("Erreur lors de la connexion");
+            }
         } catch {
-            setErrorMessage("Erreur lors de la connexion");
+            setErrorMessage("Erreur lors de l'inscription. Veuillez réessayer.");
         }
     };
 

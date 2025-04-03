@@ -3,6 +3,7 @@
 import { prisma } from "@/lib/prisma";
 import { neon } from "@neondatabase/serverless";
 import { Type } from "@prisma/client";
+import { NextResponse } from "next/server";
 
 export async function getData() {
     if (!process.env.DATABASE_URL) {
@@ -13,72 +14,113 @@ export async function getData() {
     return data;
 }
 
-export async function BookATicket({ data }: { data: { userId: string, ticketNumber: number, requestType: "CANCEL" | "BOOK", ticketType: Type } }) {
+export async function BookATicket({ data }: { data: { userId: string, ticketNumber: number, requestType: "CANCEL" | "BOOK", ticketType: Type, eventId: string } }) {
     try {
-        const { userId, ticketNumber, ticketType, requestType } = data
+        const { userId, ticketNumber, ticketType, requestType, eventId } = data;
 
+        // Vérification de base
+        if (!userId || !eventId) {
+            return {
+                status: 400,
+                message: "User ID and Event ID are required"
+            };
+        }
 
-        if (requestType == "BOOK") {
+        if (requestType === "BOOK") {
+            const event = await prisma.event.findUnique({
+                where: { event_id: eventId }
+            });
+
+            if (!event) {
+                return {
+                    status: 404,
+                    message: "Event not found"
+                };
+            }
+
+            const limit = event.event_tickets_limit_by_user_by_type ?? 5;
+            if (ticketNumber > limit) {
+                return {
+                    status: 400,
+                    message: `You can't book more than ${limit} tickets of this type`
+                };
+            }
 
             const foundTickets = await prisma.ticket.findMany({
                 take: ticketNumber,
                 where: {
                     ticket_status: "AVAILABLE",
-                    ticket_type: ticketType
+                    ticket_type: ticketType,
+                    event_id: eventId
                 }
-            })
+            });
 
-            if (foundTickets.length == 0) {
-                return new Response(JSON.stringify({ message: "no more ticket available for this type" }))
+            if (foundTickets.length === 0) {
+                return {
+                    status: 400,
+                    message: "No more tickets available for this type"
+                };
             }
 
-            const book = await prisma.ticket.updateMany({
+            const updatedTickets = await prisma.ticket.updateMany({
                 where: {
-                    ticket_id: {
-                        in: foundTickets.map(t => t.ticket_id)
-                    }
+                    ticket_id: { in: foundTickets.map(t => t.ticket_id) }
                 },
                 data: {
                     ticket_status: 'SOLD',
                     user_id: userId
                 }
+            });
 
-            })
-
-            return new Response(JSON.stringify(book), { status: 200 })
-
+            return {
+                status: 200,
+                success: true,
+                count: updatedTickets.count,
+                message: "Reservation successful"
+            };
         } else {
-            // si on veut annuler
+            // CANCEL logic
             const foundTickets = await prisma.ticket.findMany({
                 take: ticketNumber,
                 where: {
                     user_id: userId,
-                    ticket_type: ticketType
+                    ticket_type: ticketType,
+                    event_id: eventId
                 }
-            })
+            });
 
-            if (foundTickets.length == 0) {
-                return new Response(JSON.stringify({ message: "you have booked no ticket of that type" }))
+            if (foundTickets.length === 0) {
+                return {
+                    status: 400,
+                    message: "No tickets found to cancel"
+                };
             }
-            const cancel = await prisma.ticket.updateMany({
+
+            const canceledTickets = await prisma.ticket.updateMany({
                 where: {
-                    ticket_id: {
-                        in: foundTickets.map(t => t.ticket_id)
-                    }
+                    ticket_id: { in: foundTickets.map(t => t.ticket_id) }
                 },
                 data: {
                     ticket_status: "AVAILABLE",
                     user_id: null
                 }
-            })
+            });
 
-            return new Response(JSON.stringify(cancel), { status: 200 })
-
+            return {
+                status: 200,
+                success: true,
+                count: canceledTickets.count,
+                message: "Cancellation successful"
+            };
         }
-
     } catch (e) {
-        console.error("Error while updating the ticket", e)
+        console.error("Error in BookATicket:", e);
+        return {
+            status: 500,
+            message: "Internal server error",
+            error: e instanceof Error ? e.message : "Unknown error"
+        };
     } finally {
-        await prisma.$disconnect()
+        await prisma.$disconnect();
     }
 }

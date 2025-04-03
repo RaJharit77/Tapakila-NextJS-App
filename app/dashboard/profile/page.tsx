@@ -28,7 +28,6 @@ const ProfilePage = () => {
     useEffect(() => {
         const fetchUserData = async () => {
             try {
-                // Récupération des données depuis localStorage
                 const storedUser = localStorage.getItem("user");
                 if (!storedUser) {
                     router.push("/login");
@@ -37,13 +36,11 @@ const ProfilePage = () => {
 
                 const parsedUser = JSON.parse(storedUser);
                 
-                // Vérification si c'est la première connexion
                 const isFirstLogin = !parsedUser.user_first_login_date;
                 const loginDate = isFirstLogin 
                     ? new Date().toISOString() 
                     : parsedUser.user_first_login_date;
 
-                // Mise à jour de la date si première connexion
                 if (isFirstLogin) {
                     localStorage.setItem("user", JSON.stringify({
                         ...parsedUser,
@@ -51,7 +48,6 @@ const ProfilePage = () => {
                     }));
                 }
 
-                // Récupération des billets depuis l'API avec gestion des erreurs
                 let tickets = [];
                 try {
                     const ticketsResponse = await fetch(`/api/users/${parsedUser.user_id}`);
