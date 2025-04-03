@@ -1,70 +1,108 @@
-import { prisma } from "@/lib/prisma"
+import { prisma } from "@/lib/prisma";
+import { NextResponse } from "next/server";
 
-import { NextResponse } from "next/server"
-
-export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function GET(request: Request, { params }: { params: { id: string } }) {
     try {
-        const { id } = await params
+        const { id } = params;
+        
+        if (!id || typeof id !== 'string') {
+            return new NextResponse(
+                JSON.stringify({ error: "Invalid user ID" }),
+                { status: 400 }
+            );
+        }
+
         const user = await prisma.user.findUnique({
-            where: {
-                user_id: id
-            },
-            include:{
+            where: { user_id: id },
+            include: {
                 tickets: true,
                 messages: true
             }
-        })
-        return new NextResponse(JSON.stringify(user), { status: 200, headers: { 'Content-Type': 'application/json' } })
-    }
-    catch (e) {
-        console.error("Error finding the user ", e)
-        return new NextResponse(JSON.stringify({ error: "Repository erro" }),
+        });
+
+        if (!user) {
+            return new NextResponse(
+                JSON.stringify({ error: "User not found" }),
+                { status: 404 }
+            );
+        }
+
+        return new NextResponse(JSON.stringify(user), { 
+            status: 200, 
+            headers: { 'Content-Type': 'application/json' } 
+        });
+    } catch (error) {
+        console.error("Error finding the user:", error);
+        return new NextResponse(
+            JSON.stringify({ 
+                error: "Internal server error",
+                details: error instanceof Error ? error.message : String(error)
+            }),
             { status: 500 }
-        )
+        );
     } finally {
-        await prisma.$disconnect()
+        await prisma.$disconnect();
     }
 }
 
-export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function PUT(request: Request, { params }: { params: { id: string } }) {
     try {
+        const { id } = params;
         const body = await request.json();
-        const { id } = await params;
 
-        console.log("Updating user with ID:", id);
-        console.log("Data to update:", body);
-
-        const userToUpdate = await prisma.user.findUnique({
-            where: {
-                user_id: id
-            },
-            include: {
-                tickets : true
-            }
-        })
-
-        if (userToUpdate == null) {
-            return new NextResponse(JSON.stringify({ error: "User not found" }), { status: 404 })
+        if (!id || typeof id !== 'string') {
+            return new NextResponse(
+                JSON.stringify({ error: "Invalid user ID" }),
+                { status: 400 }
+            );
         }
-        else {
-            const updatedUser = await prisma.user.update({
-                where: {
-                    user_id: userToUpdate.user_id
-                },
-                data: body
 
-            })
+        const userExists = await prisma.user.findUnique({
+            where: { user_id: id }
+        });
 
-            return new NextResponse(JSON.stringify(updatedUser), { status: 200 })
+        if (!userExists) {
+            return new NextResponse(
+                JSON.stringify({ error: "User not found" }),
+                { status: 404 }
+            );
         }
-    } catch (e) {
-        console.error("Error while deleting the user", e)
-        return new NextResponse(JSON.stringify({ error: "Repository error" }),
+
+        const { user_name, user_address, user_city } = body;
+        const updateData: Record<string, any> = {};
+
+        if (user_name) updateData.user_name = user_name;
+        if (user_address !== undefined) updateData.user_address = user_address;
+        if (user_city !== undefined) updateData.user_city = user_city;
+
+        if (Object.keys(updateData).length === 0) {
+            return new NextResponse(
+                JSON.stringify({ error: "No valid fields to update" }),
+                { status: 400 }
+            );
+        }
+
+        const updatedUser = await prisma.user.update({
+            where: { user_id: id },
+            data: updateData
+        });
+
+        return new NextResponse(JSON.stringify(updatedUser), { 
+            status: 200,
+            headers: { 'Content-Type': 'application/json' }
+        });
+
+    } catch (error) {
+        console.error("Error updating user:", error);
+        return new NextResponse(
+            JSON.stringify({ 
+                error: "Internal server error",
+                details: error instanceof Error ? error.message : String(error)
+            }),
             { status: 500 }
-        )
-
+        );
     } finally {
-        await prisma.$disconnect()
+        await prisma.$disconnect();
     }
 }
 

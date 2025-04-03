@@ -22,6 +22,8 @@ model User{
   user_password String
   user_image  String?   @default("https://cdn-icons-png.flaticon.com/512/3177/3177440.png")
   user_first_login_date DateTime
+  user_address String?
+  user_city String?
   tickets Ticket[]
   messages Message[]
 }

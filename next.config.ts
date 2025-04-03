@@ -23,13 +23,20 @@ const nextConfig: NextConfig = {
         ];
     },
     images: {
-        domains: ["imagedelivery.net"],
+
+        loader: 'default',
+        domains: ['res.cloudinary.com', 'imagedelivery.net'],
         remotePatterns: [
             {
-              protocol: 'https',
-              hostname: 'res.cloudinary.com',
-            }
-        ]
+                protocol: 'https',
+                hostname: '**.cloudinary.com',
+            },
+            {
+                protocol: 'https',
+                hostname: 'imagedelivery.net',
+            },
+        ],
+
     },
     /*eslint: {
         // Warning: This allows production builds to successfully complete even if
