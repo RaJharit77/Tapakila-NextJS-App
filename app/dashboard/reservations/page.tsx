@@ -8,6 +8,7 @@ import { FaTicketAlt, FaSpinner, FaCheckCircle, FaTimesCircle } from "react-icon
 import { toast } from "react-hot-toast";
 import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
+import useSWR from 'swr';
 
 interface Ticket {
     id: string;
@@ -21,6 +22,8 @@ interface Ticket {
     event_date?: string;
     event_place?: string;
 }
+
+const fetcher = (url: string) => fetch(url).then(res => res.json());
 
 export default function ReservationsPage() {
     const { data: session, status } = useSession();
@@ -38,6 +41,60 @@ export default function ReservationsPage() {
     const [isEventPast, setIsEventPast] = useState(false);
 
     const eventId = searchParams.get("eventId") || "";
+
+    const { data: ticketsData, error: ticketsError } = useSWR(
+        eventId ? `/api/tickets?idEvent=${eventId}` : "/api/tickets",
+        fetcher,
+        {
+            refreshInterval: 5000,
+            revalidateOnFocus: true,
+            revalidateOnReconnect: true,
+            onSuccess: (data) => {
+                const formattedTickets = data.tickets?.map((ticket: any) => ({
+                    id: ticket.ticket_id,
+                    type: ticket.ticket_type,
+                    price: ticket.ticket_price,
+                    status: ticket.ticket_status,
+                    user_id: ticket.user_id,
+                    event_id: ticket.event_id
+                })) || [];
+                setTickets(formattedTickets);
+                setLoading(false);
+            },
+            onError: (error) => {
+                console.error("Error fetching tickets:", error);
+                toast.error("Erreur lors du chargement des données");
+                setLoading(false);
+            }
+        }
+    );
+
+    const { data: eventData, error: eventError } = useSWR(
+        eventId ? `/api/events/${eventId}` : null,
+        fetcher,
+        {
+            refreshInterval: 5000,
+            revalidateOnFocus: true,
+            revalidateOnReconnect: true,
+            onSuccess: (data) => {
+                if (data) {
+                    setEventDetails({
+                        name: data.event_name,
+                        image: data.event_image,
+                        date: data.event_date,
+                        place: data.event_place
+                    });
+                    const eventDate = new Date(data.event_date);
+                    const now = new Date();
+                    setIsEventPast(eventDate < now);
+                }
+            },
+            onError: (error) => {
+                console.error("Error fetching event:", error);
+                toast.error("Erreur lors du chargement des données");
+            }
+        }
+    );
 
     useEffect(() => {
         if (!eventId) {
@@ -84,54 +141,6 @@ export default function ReservationsPage() {
             window.removeEventListener('storage', checkAuth);
         };
     }, [status, session]);
-
-    useEffect(() => {
-        async function fetchData() {
-            try {
-                const ticketsUrl = eventId ? `/api/tickets?idEvent=${eventId}` : "/api/tickets";
-                const ticketsResponse = await fetch(ticketsUrl);
-
-                if (!ticketsResponse.ok) throw new Error("Failed to fetch tickets");
-
-                const ticketsData = await ticketsResponse.json();
-                const formattedTickets = ticketsData.tickets?.map((ticket: any) => ({
-                    id: ticket.ticket_id,
-                    type: ticket.ticket_type,
-                    price: ticket.ticket_price,
-                    status: ticket.ticket_status,
-                    user_id: ticket.user_id,
-                    event_id: ticket.event_id
-                })) || [];
-
-                setTickets(formattedTickets);
-
-                if (eventId) {
-                    const eventResponse = await fetch(`/api/events/${eventId}`);
-                    if (eventResponse.ok) {
-                        const eventData = await eventResponse.json();
-                        setEventDetails({
-                            name: eventData.event_name,
-                            image: eventData.event_image,
-                            date: eventData.event_date,
-                            place: eventData.event_place
-                        });
-
-                        const eventDate = new Date(eventData.event_date);
-                        const now = new Date();
-                        setIsEventPast(eventDate < now);
-                    }
-                }
-
-            } catch (error) {
-                console.error("Error fetching data:", error);
-                toast.error("Erreur lors du chargement des données");
-            } finally {
-                setLoading(false);
-            }
-        }
-
-        fetchData();
-    }, [eventId]);
 
     const availableTickets = tickets.filter(t => t.status === "AVAILABLE");
     const userTickets = tickets.filter(t =>
