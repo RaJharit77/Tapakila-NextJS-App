@@ -30,22 +30,21 @@ export default function EventCard({
 
     const validImageUrl = getValidImageUrl(imageUrl);
 
-    const handleImageError = (e: React.SyntheticEvent<HTMLImageElement>) => {
-        const target = e.target as HTMLImageElement;
-        target.src = '/img/404NotFound.jpg';
-    };
-
     return (
         <div className="bg-blancGlacialNeutre rounded-xl shadow-md overflow-hidden hover:shadow-xl transition-shadow h-full flex flex-col w-full max-w-[350px] mx-auto">
             <div className="relative w-full h-48 aspect-auto sm:h-56 md:h-64">
                 <Image
                     src={validImageUrl}
-                    alt={`${name}`}
+                    alt={`Image de l'événement ${name}`}
                     fill
                     className="object-cover object-center"
                     priority={false}
-                    onError={handleImageError}
                     sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, 33vw"
+                    onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.src = '/img/404NotFound.jpg';
+                        target.onerror = null;
+                    }}
                 />
             </div>
             <div className="p-4 flex-grow flex flex-col">
@@ -69,6 +68,7 @@ export default function EventCard({
                     <Link
                         href={`/events/${id}`}
                         className="inline-block px-4 py-2 bg-bleuElec text-white rounded-md hover:bg-bleuNuit hover:text-orMetallique transition-colors duration-300 text-center w-full"
+                        aria-label={`Voir les détails de ${name}`}
                     >
                         Voir détails
                     </Link>

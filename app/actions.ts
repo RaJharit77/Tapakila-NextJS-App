@@ -3,7 +3,6 @@
 import { prisma } from "@/lib/prisma";
 import { neon } from "@neondatabase/serverless";
 import { Type } from "@prisma/client";
-import { NextResponse } from "next/server";
 
 export async function getData() {
     if (!process.env.DATABASE_URL) {
@@ -18,7 +17,6 @@ export async function BookATicket({ data }: { data: { userId: string, ticketNumb
     try {
         const { userId, ticketNumber, ticketType, requestType, eventId } = data;
 
-        // Vérification de base
         if (!userId || !eventId) {
             return {
                 status: 400,
@@ -79,7 +77,6 @@ export async function BookATicket({ data }: { data: { userId: string, ticketNumb
                 message: "Reservation successful"
             };
         } else {
-            // CANCEL logic
             const foundTickets = await prisma.ticket.findMany({
                 take: ticketNumber,
                 where: {

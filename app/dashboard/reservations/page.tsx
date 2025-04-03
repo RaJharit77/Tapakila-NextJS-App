@@ -375,7 +375,7 @@ export default function ReservationsPage() {
 
     if (step === "completed") {
         return (
-            <div className="min-h-screen py-8 px-4 sm:px-6 lg:px-8 relative">
+            <div className="min-h-screen py-8 px-4 sm:px-6 lg:px-8 relative mt-20">
                 <Image
                     src="/img/bgReservation.jpg"
                     alt="Background"
