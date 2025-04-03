@@ -39,6 +39,13 @@ export default function ReservationsPage() {
     const eventId = searchParams.get("eventId") || "";
 
     useEffect(() => {
+        if (!eventId) {
+            toast.error("No event selected - redirecting...");
+            router.push("/events");
+        }
+    }, [eventId, router]);
+
+    useEffect(() => {
         console.log("Authentication status:", status);
         console.log("Session data:", session);
     }, [status, session])
@@ -46,24 +53,36 @@ export default function ReservationsPage() {
     useEffect(() => {
         const checkAuth = () => {
             const localUser = localStorage.getItem('user');
+            const localUserId = localStorage.getItem('user_id');
+            let userId = session?.user?.id;
+        
+            if (!userId && localUser) {
+                try {
+                    const userData = JSON.parse(localUser);
+                    userId = userData.id || localUserId;
+                } catch (e) {
+                    console.error("Failed to parse user data from localStorage", e);
+                }
+            }
+        
             const isAuth = status === "authenticated" || !!localUser;
             setIsAuthenticated(isAuth);
-
+        
             console.log("Auth status:", {
                 nextAuthStatus: status,
                 hasLocalUser: !!localUser,
-                isAuthenticated: isAuth
+                isAuthenticated: isAuth,
+                userId: userId
             });
         };
 
         checkAuth();
-
         window.addEventListener('storage', checkAuth);
 
         return () => {
             window.removeEventListener('storage', checkAuth);
         };
-    }, [status]);
+    }, [status, session]);
 
     useEffect(() => {
         async function fetchData() {
@@ -110,7 +129,10 @@ export default function ReservationsPage() {
     }, [eventId]);
 
     const availableTickets = tickets.filter(t => t.status === "AVAILABLE");
-    const userTickets = tickets.filter(t => t.user_id === session?.user?.id);
+    const userTickets = tickets.filter(t =>
+        t.user_id === session?.user?.id ||
+        t.user_id === localStorage.getItem('user_id')
+    );
 
     const handleBookTickets = async () => {
         if (!isAuthenticated) {
@@ -137,13 +159,30 @@ export default function ReservationsPage() {
     };
 
     const confirmReservation = async () => {
-        if (!isAuthenticated || !reservationDetails) return;
+        if (!isAuthenticated || !reservationDetails) {
+            toast.error("Authentication or reservation details missing");
+            return;
+        }
+
+        let userId = session?.user?.id;
+        if (!userId) {
+            userId = localStorage.getItem('user_id') || '';
+            if (!userId) {
+                toast.error("User ID is missing - please login again");
+                return;
+            }
+        }
+
+        if (!eventId) {
+            toast.error("Event ID is missing - please select an event");
+            return;
+        }
 
         setIsBooking(true);
         try {
-            const response = await BookATicket({
+            const result = await BookATicket({
                 data: {
-                    userId: session?.user?.id || "",
+                    userId: userId,
                     ticketNumber: reservationDetails.count,
                     ticketType: reservationDetails.type as "VIP" | "STANDARD" | "EARLY_BIRD",
                     requestType: "BOOK",
@@ -151,18 +190,20 @@ export default function ReservationsPage() {
                 },
             });
 
-            if (response?.ok) {
-                const result = await response.json();
-                setStep("completed");
-                toast.success(`${result.count} billet(s) réservé(s) avec succès!`);
-            } else {
-                const error = await response?.json();
-                toast.error(error.message || "Erreur lors de la réservation");
-                setStep("selection");
+            if (!result) {
+                throw new Error("Server did not respond - please try again later");
             }
+
+            if (result.status !== 200) {
+                throw new Error(result.message || "Failed to process reservation");
+            }
+
+            setStep("completed");
+            toast.success(`${result.count} ticket(s) reserved successfully!`);
+
         } catch (error) {
             console.error("Booking error:", error);
-            toast.error("Erreur lors de la réservation");
+            toast.error(error instanceof Error ? error.message : "Reservation failed");
             setStep("selection");
         } finally {
             setIsBooking(false);
@@ -175,11 +216,25 @@ export default function ReservationsPage() {
             return;
         }
 
+        let userId = session?.user?.id;
+        if (!userId) {
+            userId = localStorage.getItem('user_id') || '';
+            if (!userId) {
+                toast.error("User ID is missing - please login again");
+                return;
+            }
+        }
+
+        if (!eventId) {
+            toast.error("Event ID is missing - please select an event");
+            return;
+        }
+
         setIsBooking(true);
         try {
-            const response = await BookATicket({
+            const result = await BookATicket({
                 data: {
-                    userId: session?.user?.id || "",
+                    userId: userId,
                     ticketNumber: ticketCount,
                     ticketType: selectedType as "VIP" | "STANDARD" | "EARLY_BIRD",
                     requestType: "CANCEL",
@@ -187,17 +242,19 @@ export default function ReservationsPage() {
                 },
             });
 
-            if (response?.ok) {
-                const result = await response.json();
+            if (!result) {
+                throw new Error("No response from server");
+            }
+
+            if (result.status === 200) {
                 toast.success(`${result.count} billet(s) annulé(s) avec succès!`);
                 router.refresh();
             } else {
-                const error = await response?.json();
-                toast.error(error.message || "Erreur lors de l'annulation");
+                throw new Error(result.message || "Erreur lors de l'annulation");
             }
         } catch (error) {
             console.error("Cancellation error:", error);
-            toast.error("Erreur lors de l'annulation");
+            toast.error(error instanceof Error ? error.message : "Erreur lors de l'annulation");
         } finally {
             setIsBooking(false);
         }
@@ -485,8 +542,8 @@ export default function ReservationsPage() {
                                     onClick={handleBookTickets}
                                     disabled={isBooking || !isAuthenticated}
                                     className={`w-full py-2 px-4 rounded-md transition-colors ${isBooking || !isAuthenticated
-                                            ? 'bg-bleuElec/50 text-blancGlacial/50 cursor-not-allowed'
-                                            : 'bg-bleuElec text-blancGlacial hover:bg-gray-900 hover:text-orMetallique'
+                                        ? 'bg-bleuElec/50 text-blancGlacial/50 cursor-not-allowed'
+                                        : 'bg-bleuElec text-blancGlacial hover:bg-gray-900 hover:text-orMetallique'
                                         }`}
                                 >
                                     {isBooking ? (
@@ -540,8 +597,8 @@ export default function ReservationsPage() {
                                     onClick={handleCancelTickets}
                                     disabled={isBooking || !isAuthenticated}
                                     className={`w-full py-2 px-4 rounded-md transition-colors ${isBooking || !isAuthenticated
-                                            ? 'bg-bleuElec/50 text-blancGlacial/50 cursor-not-allowed'
-                                            : 'bg-bleuElec text-blancGlacial hover:bg-gray-900 hover:text-orMetallique'
+                                        ? 'bg-bleuElec/50 text-blancGlacial/50 cursor-not-allowed'
+                                        : 'bg-bleuElec text-blancGlacial hover:bg-gray-900 hover:text-orMetallique'
                                         }`}
                                 >
                                     {isBooking ? (

@@ -29,7 +29,15 @@ const LoginPage = () => {
             }
 
             const data = await res.json();
-            localStorage.setItem("user", JSON.stringify(data.user));
+
+            localStorage.setItem("user", JSON.stringify({
+                id: data.user.id,
+                name: data.user.name,
+                email: data.user.email
+            }));
+
+            localStorage.setItem("user_id", data.user.id);
+
             window.location.href = "/dashboard/profile";
         } catch {
             setErrorMessage("Erreur lors de la connexion");
