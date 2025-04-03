@@ -13,7 +13,7 @@ const pusher = new Pusher({
 export async function POST(
   req: Request
 ) {
-  const { eventId } = await req.json();
+  const { eventId, eventName } = await req.json();
 
   console.log("Checking tickets for event:", eventId);
 
@@ -32,6 +32,7 @@ export async function POST(
         'event-sold-out', 
         {
           eventId: eventId, 
+          eventName: eventName,
           message: `L'événement ${eventId} est complet !`
         }
     );

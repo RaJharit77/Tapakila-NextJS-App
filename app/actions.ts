@@ -14,7 +14,7 @@ export async function getData() {
     return data;
 }
 
-const checkTickets = async (eventId: string) => {
+const checkTickets = async (eventId: string, eventName: string) => {
    
     const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
     const apiUrl = `${baseUrl}/api/tickets/update`;
@@ -24,7 +24,7 @@ const checkTickets = async (eventId: string) => {
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ eventId }), 
+      body: JSON.stringify({ eventId, eventName }), 
     });
   };
 
@@ -85,7 +85,7 @@ export async function BookATicket({ data }: { data: { userId: string, ticketNumb
                     user_id: userId
                 }
             });
-            await checkTickets(eventId);
+            await checkTickets(eventId, event.event_name);
             return {
                 status: 200,
                 success: true,

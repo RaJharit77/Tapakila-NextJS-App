@@ -14,12 +14,26 @@ export default function EventNotifications() {
 
     const channel = pusher.subscribe('global-notifications'); // Même canal pour tous
     
-    channel.bind('event-sold-out', (data: { eventId: string, message: string }) => {
-      alert(`Nouvelle alerte : ${data.message}`);
+    channel.bind('event-sold-out', (data: { eventId: string, eventName: string, message: string }) => {
+    
+      toast(`L'Événement ${data.eventName} est complet  !`, {
+        description: data.message,
+        action: {
+          label: 'Voir',
+          onClick: () => window.location.href = `/events/${data.eventId}`
+        },
+        position: 'top-right',
+        duration: 8000, 
+        style: {
+          background: '#1e293b',
+          color: 'white',
+          border: 'none'
+        }
+      });   
 
     });
-
     return () => pusher.unsubscribe('global-notifications');
+    
   }, []);
 
   return null;
