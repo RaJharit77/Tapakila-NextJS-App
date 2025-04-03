@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import { Status, Type } from "@prisma/client";
+import { Status, Type, Ticket, Prisma } from "@prisma/client";
 import { NextResponse } from "next/server";
 
 export async function GET(request: Request) {
@@ -61,30 +61,86 @@ export async function GET(request: Request) {
 //  ========== ADMIN ==========
 export async function DELETE(request: Request) {
   try {
-    const { ticketNumber } = await request.json()
+    const { searchParams } = new URL(request.url);
+    const ticketNumber = searchParams.get('ticketNumber');
+    const eventId = searchParams.get('event_id');
+    const ticketType = searchParams.get('ticket_type');
+
+    if (!ticketNumber || !eventId) {
+      return new NextResponse(
+        JSON.stringify({ error: "Paramètres requis manquants : ticketNumber ou event_id" }),
+        { status: 400 }
+      );
+    }
+
+    const numRequestedTickets = Number(ticketNumber);
+    if (isNaN(numRequestedTickets)) {
+      return new NextResponse(
+        JSON.stringify({ error: "Le paramètre ticketNumber doit être un nombre valide" }),
+        { status: 400 }
+      );
+    }
+
+
+    const whereClause: any = {
+      event_id: eventId,
+      ticket_status: "AVAILABLE"
+    };
+
+    if (ticketType) {
+      whereClause.ticket_type = ticketType;
+    }
+
+
+    const availableTickets = await prisma.ticket.count({
+      where: whereClause
+    });
+
+    if (availableTickets < numRequestedTickets) {
+      return new NextResponse(
+        JSON.stringify({
+          error: "Stock insuffisant",
+          details: {
+            requested: numRequestedTickets,
+            available: availableTickets,
+            ticketType: ticketType || "Tous types"
+          }
+        }),
+        { status: 409 } 
+      );
+    }
+
+
     const foundTickets = await prisma.ticket.findMany({
-      take: Number(ticketNumber),
-      where: {
-        ticket_status: "AVAILABLE"
-      }
-    })
+      take: numRequestedTickets,
+      where: whereClause,
 
-    const deleteTickets = await prisma.ticket.deleteMany({
-      where: {
-        ticket_id: {
-          in: foundTickets.map(t => t.ticket_id)
-        }
-      }
-    })
+    });
 
-    return new NextResponse(JSON.stringify(deleteTickets), { status: 200 });
+  
+    const deleteResult = await prisma.ticket.deleteMany({
+      where: {
+        ticket_id: { in: foundTickets.map(t => t.ticket_id) }
+      }
+    });
+
+    return new NextResponse(JSON.stringify({
+      success: true,
+      deletedCount: deleteResult.count,
+      remaining: availableTickets - deleteResult.count,
+      eventId,
+      ticketTypeFilter: ticketType || "Tous types"
+    }), { status: 200 });
 
   } catch (e) {
-    console.error("Error while deleting the ticket", e)
-    return new NextResponse(JSON.stringify({ error: "Repository error" }),
+    console.error("Erreur :", e);
+    return new NextResponse(
+      JSON.stringify({ 
+        error: "Erreur lors de la suppression",
+        details: e instanceof Error ? e.message : "Erreur inconnue"
+      }),
       { status: 500 }
     );
-
   } finally {
     await prisma.$disconnect();
   }
@@ -93,37 +149,61 @@ export async function DELETE(request: Request) {
 export async function POST(request: Request) {
   try {
     const { ticketNumber, idEvent, ticket_type, ticketPrice } = await request.json();
+    console.log(ticketNumber);
+    console.log(idEvent);
+    console.log(ticket_type);
+    console.log(ticketPrice);
 
+
+ 
     if (!ticketNumber || !idEvent || !ticket_type || ticketPrice === undefined) {
-      return new NextResponse(JSON.stringify({ error: "Champs requis manquants" }), { 
+      return new NextResponse(JSON.stringify({ error: "Missing required fields" }), { 
         status: 400 
       });
     }
 
-    const lastTicket = await prisma.ticket.findFirst({
-      where: {
-        event_id: idEvent,
-        ticket_id: { startsWith: idEvent + "TKT" }
-      },
-      orderBy: { ticket_creation_date: "desc" },
-      select: { ticket_id: true }
-    });
-
-    const lastId = lastTicket 
-      ? parseInt(lastTicket.ticket_id.split(idEvent + "TKT")[1] || "0")
-      : 0;
-
-    const ticketsToCreate = [];
-    for (let i = 1; i <= ticketNumber; i++) {
-      ticketsToCreate.push({
-        ticket_id: `${idEvent}TKT${lastId + i}`,
-        ticket_status: "AVAILABLE" as Status,
-        event_id: idEvent,
-        ticket_type,
-        ticket_price: ticketPrice,
-        ticket_creation_date: new Date(),
+    if (typeof idEvent !== 'string') {
+      return new NextResponse(JSON.stringify({ error: "Invalid event ID format" }), { 
+        status: 400 
       });
     }
+
+  
+    let lastId = 0;
+    try {
+      const lastTicket = await prisma.ticket.findFirst({
+        where: {
+          event_id: idEvent,
+          ticket_id: { startsWith: idEvent + "TKT" }
+        },
+        orderBy: { ticket_creation_date: 'desc' }, 
+        select: { ticket_id: true }
+      });
+
+      if (lastTicket) {
+        console.log("Found last ticket:", lastTicket.ticket_id); // Added log
+        const match = lastTicket.ticket_id.match(new RegExp(`${idEvent}TKT(\\d+)`));
+        lastId = match ? parseInt(match[1]) : 0;
+        console.log("Calculated lastId:", lastId); // Added log
+      } else {
+        console.log("No previous tickets found for this event."); // Added log for clarity
+      }
+    } catch (queryError) {
+      console.error("Query error:", queryError);
+ 
+    }
+
+ 
+    const ticketsToCreate = Array.from({ length: ticketNumber }, (_, i) => ({
+      ticket_id: `${idEvent}TKT${lastId + i + 1}`,
+      ticket_status: "AVAILABLE" as const,
+      event_id: idEvent,
+      ticket_type,
+      ticket_price: ticketPrice,
+    }));
+
+    console.log(ticketsToCreate);
+
 
     const result = await prisma.ticket.createMany({
       data: ticketsToCreate,
@@ -137,9 +217,9 @@ export async function POST(request: Request) {
     });
 
   } catch (e) {
-    console.error("Erreur lors de la création des tickets:", e);
+    console.error("Ticket creation failed:", e);
     return new NextResponse(JSON.stringify({ 
-      error: "Repository error",
+      error: e instanceof Error ? e.message : "Internal server error",
     }), { 
       status: 500 
     });

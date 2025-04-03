@@ -48,7 +48,7 @@ model Ticket {
   ticket_type   Type
   ticket_price  Int
   ticket_status Status
-  ticket_creation_date DateTime @default(now())
+  ticket_creation_date DateTime @default(now()) 
   user_id       String?
   event_id      String
   event         Event   @relation(fields: [event_id], references: [event_id])

@@ -8,7 +8,7 @@ const nextConfig: NextConfig = {
                 headers: [
                     {
                         key: "Access-Control-Allow-Origin",
-                        value: "http://localhost:5173",
+                        value: "*",
                     },
                     {
                         key: "Access-Control-Allow-Methods",
@@ -16,7 +16,7 @@ const nextConfig: NextConfig = {
                     },
                     {
                         key: "Access-Control-Allow-Headers",
-                        value: "Content-Type, Authorization",
+                        value: "*",
                     },
                 ],
             }
@@ -24,6 +24,12 @@ const nextConfig: NextConfig = {
     },
     images: {
         domains: ["imagedelivery.net"],
+        remotePatterns: [
+            {
+              protocol: 'https',
+              hostname: 'res.cloudinary.com',
+            }
+        ]
     },
     /*eslint: {
         // Warning: This allows production builds to successfully complete even if
