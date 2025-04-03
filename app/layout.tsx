@@ -1,7 +1,6 @@
 import Footer from "@/components/Footer";
 import Navbar from "@/components/NavBar";
 import "@/styles/globals.css";
-import { NextUIProvider } from "@nextui-org/react";
 import { Analytics } from '@vercel/analytics/next';
 import { Poppins } from "next/font/google";
 import { ReactNode } from "react";
@@ -9,14 +8,14 @@ import { ToastContainer } from "react-toastify";
 import { ToastProvider } from "@/components/ToastProvider";
 import "react-toastify/dist/ReactToastify.css";
 import { Toaster } from 'react-hot-toast';
-import { SessionProvider } from "next-auth/react";
+import Providers from "./providers";
 
 const poppins = Poppins({
   subsets: ["latin"],
   weight: ["400", "700"],
 });
 
-export const metadata = {
+export const metadata: Metadata = {
   title: "Tapakila App",
   icons: {
     icon: "/assets/favicon.png",
@@ -27,8 +26,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en" className={poppins.className}>
       <body>
-        <SessionProvider refetchInterval={5 * 60} refetchOnWindowFocus={true}>
-        <NextUIProvider>
+        <Providers>
           <div>
             <Navbar />
             <main className="pt-0">
@@ -40,8 +38,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
             </main>
             <Footer />
           </div>
-          </NextUIProvider>
-        </SessionProvider>
+        </Providers>
       </body>
     </html>
   );
