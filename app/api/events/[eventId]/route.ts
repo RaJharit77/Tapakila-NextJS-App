@@ -48,6 +48,8 @@ export async function PUT(request: Request, { params }: { params: { eventId: str
         const { eventId } = await params
         const body = await request.json()
 
+        console.log(body);
+        
         const event = await prisma.event.findUnique({
             where: {
                 event_id: eventId
@@ -86,36 +88,51 @@ export async function PUT(request: Request, { params }: { params: { eventId: str
     }
 }
 
-export async function DELETE(params: string) {
+export async function DELETE(
+    request: Request,
+    { params }: { params: { eventId: string } }
+  ) {
     try {
-        const event = await prisma.event.delete({
-            where: {
-                event_id: params
-            }
-        })
-
-        const verify = await prisma.event.findUnique({
-            where: {
-                event_id: params
-            }
-        })
-
-        if (verify == null) {
-            return NextResponse.json(
-                { error: "that event doesn't exist" },
-                { status: 500 }
-            )
-        } else {
-            return new NextResponse(JSON.stringify(event), { status: 200, headers: { 'Content-Type': 'application/json' } })
+      
+      const existingEvent = await prisma.event.findUnique({
+        where: {
+          event_id: params.eventId
         }
-
+      })
+  
+      if (!existingEvent) {
+        return NextResponse.json(
+          { error: "Event not found" },
+          { status: 404 }
+        )
+      }
+  
+      // 2. Delete the event
+      const deletedEvent = await prisma.event.delete({
+        where: {
+          event_id: params.eventId
+        }
+      })
+  
+      return NextResponse.json(
+        { 
+          success: true,
+          message: "Event deleted successfully",
+          data: deletedEvent
+        },
+        { status: 200 }
+      )
+  
+    } catch (error: any) {
+      console.error("Deletion error:", error)
+      return NextResponse.json(
+        { 
+          error: "Failed to delete event",
+          details: error.message
+        },
+        { status: 500 }
+      )
+    } finally {
+      await prisma.$disconnect()
     }
-    catch (error) {
-        console.error("error fetching datas", error)
-        return new NextResponse(JSON.stringify({ error: "Repository Error" }), { status: 500 })
-
-    }
-    finally {
-        prisma.$disconnect()
-    }
-}
+  }
