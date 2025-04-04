@@ -1,30 +1,41 @@
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 
-export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function GET(request: Request, { params }: { params: { id: string } }) {
     try {
-        const { id } = await params
-        const message = await prisma.message.findUnique({
-            where: {
-                message_id: id
-            },
-            include: {
-                user: true
-            }
-        })
-
-        if (message == null) {
-            return new NextResponse(JSON.stringify({ error: "Message not found" }), { status: 404 })
+        const { id } = params;
+        
+        if (!id) {
+            return new NextResponse(
+                JSON.stringify({ error: "Message ID is required" }),
+                { status: 400 }
+            );
         }
-        return new NextResponse(JSON.stringify(message), { status: 200, headers: { 'Content-Type': 'application/json' } })
-    }
-    catch (e) {
-        console.error("Error finding the message ", e)
-        return new NextResponse(JSON.stringify({ error: "Repository erro" }),
+
+        const message = await prisma.message.findUnique({
+            where: { message_id: id },
+            include: { user: true }
+        });
+
+        if (!message) {
+            return new NextResponse(
+                JSON.stringify({ error: "Message not found" }),
+                { status: 404 }
+            );
+        }
+
+        return new NextResponse(JSON.stringify(message), { 
+            status: 200, 
+            headers: { 'Content-Type': 'application/json' } 
+        });
+    } catch (error) {
+        console.error("Error:", error);
+        return new NextResponse(
+            JSON.stringify({ error: "Internal server error" }),
             { status: 500 }
-        )
+        );
     } finally {
-        await prisma.$disconnect()
+        await prisma.$disconnect();
     }
 }
 

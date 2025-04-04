@@ -21,44 +21,49 @@ export default function ContactPage() {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-
-        const storedUser = localStorage.getItem("user");
-
-        if (!storedUser) {
-            toast.error("Vous devez être connecté pour envoyer un message.");
-            router.push("/login");
-            return;
-        }
-
-        const user = JSON.parse(storedUser);
-        const user_id = user.user_id;
-
+    
         try {
+            const storedUser = localStorage.getItem("user");
+            
+            if (!storedUser) {
+                toast.error("You must be logged in to send a message.");
+                router.push("/login");
+                return;
+            }
+    
+            const user = JSON.parse(storedUser);
+            
+            if (!user.user_id) {
+                toast.error("User information is incomplete.");
+                return;
+            }
+    
             const response = await fetch("/api/contact", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
                 },
                 body: JSON.stringify({
-                    user_id: user_id,
+                    user_id: user.user_id,
                     subject: formData.subject,
                     message: formData.message,
                 }),
             });
-
+    
             const result = await response.json();
-
+    
             if (response.ok) {
-                setStatus({ message: "Message envoyé avec succès !", type: "success" });
+                toast.success("Message sent successfully!");
                 setFormData({
                     subject: "",
                     message: "",
                 });
             } else {
-                setStatus({ message: result.error || "Erreur lors de l'envoi.", type: "error" });
+                toast.error(result.error || "Failed to send message.");
             }
-        } catch {
-            setStatus({ message: "Erreur serveur. Réessayez plus tard.", type: "error" });
+        } catch (error) {
+            console.error("Error:", error);
+            toast.error("An error occurred. Please try again.");
         }
     };
 

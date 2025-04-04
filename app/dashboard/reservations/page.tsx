@@ -141,7 +141,57 @@ export default function ReservationsPage() {
             window.removeEventListener('storage', checkAuth);
         };
     }, [status, session]);
+/** 
+    useEffect(() => {
+        async function fetchData() {
+            try {
+                const ticketsUrl = eventId ? `/api/tickets?idEvent=${eventId}` : "/api/tickets";
+                const ticketsResponse = await fetch(ticketsUrl);
 
+                if (!ticketsResponse.ok) throw new Error("Failed to fetch tickets");
+
+                const ticketsData = await ticketsResponse.json();
+                const formattedTickets = ticketsData.tickets?.map((ticket: any) => ({
+                    id: ticket.ticket_id,
+                    type: ticket.ticket_type,
+                    price: ticket.ticket_price,
+                    status: ticket.ticket_status,
+                    user_id: ticket.user_id,
+                    event_id: ticket.event_id
+                })) || [];
+
+                setTickets(formattedTickets);
+
+                if (eventId) {
+                    const eventResponse = await fetch(`/api/events/${eventId}`);
+                    if (eventResponse.ok) {
+                        const eventData = await eventResponse.json();
+                        setEventDetails({
+                            name: eventData.event_name,
+                            image: eventData.event_image,
+                            date: eventData.event_date,
+                            place: eventData.event_place
+                        });
+
+                        const eventDate = new Date(eventData.event_date);
+                        const now = new Date();
+                        setIsEventPast(eventDate < now);
+                    }
+                }
+
+            } catch (error) {
+                console.error("Error fetching data:", error);
+                toast.error("Erreur lors du chargement des données");
+            } finally {
+                setLoading(false);
+            }
+        }
+
+        fetchData();
+    }, [eventId]);
+
+>>>>>>> 660241c59daf0b98f958542607f7e946d015a9e0
+ */
     const availableTickets = tickets.filter(t => t.status === "AVAILABLE");
     const userTickets = tickets.filter(t =>
         t.user_id === session?.user?.id ||
