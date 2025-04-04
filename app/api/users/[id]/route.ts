@@ -72,8 +72,8 @@ export async function PUT(request: Request, { params }: { params: { id: string }
         const updateData: Record<string, any> = {};
 
         if (user_name) updateData.user_name = user_name;
-        if (user_address !== undefined) updateData.user_address = user_address;
-        if (user_city !== undefined) updateData.user_city = user_city;
+        if (user_address !== undefined) updateData.user_address = user_address || null; 
+        if (user_city !== undefined) updateData.user_city = user_city || null;
 
         if (Object.keys(updateData).length === 0) {
             return new NextResponse(
