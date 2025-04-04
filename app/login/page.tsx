@@ -65,6 +65,7 @@ const LoginPage = () => {
                         placeholder="john.doe@gmail.com"
                         className="w-full p-2 rounded-md bg-bleuNuit text-blancCasse"
                         value={email}
+                        name="email"
                         onChange={(e) => setEmail(e.target.value)}
                     />
                 </div>
@@ -72,6 +73,7 @@ const LoginPage = () => {
                     <label htmlFor="password" className="block mb-2">Mot de passe</label>
                     <input
                         type={showPassword ? "text" : "password"}
+                        name="password"
                         id="password"
                         placeholder="votre mot de passe"
                         className="w-full p-2 rounded-md bg-bleuNuit text-blancCasse pr-10"

@@ -134,7 +134,7 @@ export async function POST(request: Request) {
                 event_name,
                 event_place,
                 event_category,
-                event_date: date,
+                event_date: event_date,
                 event_description: body.event_description,
                 event_image: body.event_image,
                 event_organizer: body.event_organizer ?? "",

@@ -4,12 +4,13 @@ import EventCard from "@/components/EventCard";
 import { Slide } from "@mui/material";
 import Link from "next/link";
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Autoplay, Navigation, Pagination } from "swiper/modules";
 import { Swiper, SwiperSlide } from "swiper/react";
 import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
+import useSWR from "swr";
 
 interface ApiEvent {
   event_id: string;
@@ -37,73 +38,64 @@ interface TicketStats {
   color: string;
 }
 
+const eventsFetcher = async (url: string) => {
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error("Erreur de chargement de la page");
+  }
+  const data: ApiEvent[] = await response.json();
+  return data.map((event) => ({
+    id: event.event_id,
+    name: event.event_name,
+    date: event.event_date,
+    location: event.event_place,
+    description: event.event_description,
+    imageUrl: event.event_image,
+    category: event.event_category || "Autres",
+  }));
+};
+
+const ticketStatsFetcher = async (url: string) => {
+  const response = await fetch(url);
+  const data = await response.json();
+  return [
+    { type: 'VIP', count: data.vipCount || 0, color: '#FF6384' },
+    { type: 'STANDARD', count: data.standardCount || 0, color: '#36A2EB' },
+    { type: 'EARLY_BIRD', count: data.earlyBirdCount || 0, color: '#FFCE56' }
+  ];
+};
+
 export default function Home() {
-  const [events, setEvents] = useState<Event[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [showContent, setShowContent] = useState(false);
-  const [ticketStats, setTicketStats] = useState<TicketStats[]>([]);
 
-  useEffect(() => {
-    async function fetchEvents() {
-      try {
-        const response = await fetch("/api/events");
-
-        if (!response.ok) {
-          throw new Error("Erreur de chargement de la page");
-        }
-
-        const data: ApiEvent[] = await response.json();
-
-        const formattedEvents: Event[] = data.map((event) => ({
-          id: event.event_id,
-          name: event.event_name,
-          date: event.event_date,
-          location: event.event_place,
-          description: event.event_description,
-          imageUrl: event.event_image,
-          category: event.event_category || "Autres",
-        }));
-
-        setEvents(formattedEvents);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "An error occurred");
-      } finally {
-        setLoading(false);
-        setShowContent(true);
-      }
+  const { data: events, error: eventsError, isLoading: eventsLoading } = useSWR<Event[]>(
+    "/api/events",
+    eventsFetcher,
+    {
+      refreshInterval: 5000,
+      revalidateOnFocus: true,
+      revalidateOnReconnect: true,
+      dedupingInterval: 2000,
+      onSuccess: () => setShowContent(true)
     }
-    fetchEvents();
-  }, []);
+  );
 
-  useEffect(() => {
-    async function fetchTicketStats() {
-      try {
-        const response = await fetch('/api/tickets');
-        const data = await response.json();
-
-        const stats: TicketStats[] = [
-          { type: 'VIP', count: data.vipCount || 0, color: '#FF6384' },
-          { type: 'STANDARD', count: data.standardCount || 0, color: '#36A2EB' },
-          { type: 'EARLY_BIRD', count: data.earlyBirdCount || 0, color: '#FFCE56' }
-        ];
-
-        setTicketStats(stats);
-      } catch (error) {
-        console.error("Error fetching ticket stats:", error);
-      } finally {
-        setLoading(false);
-      }
+  const { data: ticketStats = [] } = useSWR<TicketStats[]>(
+    "/api/tickets",
+    ticketStatsFetcher,
+    {
+      refreshInterval: 5000,
+      revalidateOnFocus: true,
+      revalidateOnReconnect: true,
+      dedupingInterval: 2000
     }
-
-    fetchTicketStats();
-  }, []);
+  );
 
   const total = ticketStats.reduce((sum, stat) => sum + stat.count, 0);
 
   const currentDate = new Date();
-  const upcomingEvents = events.filter((event) => new Date(event.date) >= currentDate);
-  const pastEvents = events.filter((event) => new Date(event.date) < currentDate);
+  const upcomingEvents = events?.filter((event) => new Date(event.date) >= currentDate) || [];
+  const pastEvents = events?.filter((event) => new Date(event.date) < currentDate) || [];
 
   const renderEventSection = (
     title: string,
@@ -152,13 +144,13 @@ export default function Home() {
         />
         <div className="absolute inset-0 bg-black bg-opacity-50"></div>
         <div className="relative z-10 text-blancGlacialNeutre px-8 lg:px-16">
-          {loading ? (
+          {eventsLoading ? (
             <div className="text-center justify-center text-blancGlacialNeutre text-xl py-36">
               Chargement en cours...
             </div>
-          ) : error ? (
+          ) : eventsError ? (
             <div className="text-center text-red-500 text-xl py-36">
-              {error}
+              {eventsError.message}
             </div>
           ) : (
             <Slide in={showContent} direction="up" timeout={1000}>
@@ -182,7 +174,7 @@ export default function Home() {
       <section className="relative py-16">
         <Image
           src="/img/event.jpg"
-          alt="Événements à l&apos;affiche"
+          alt="Événements à l'affiche"
           fill
           className="object-cover"
           quality={80}
@@ -190,7 +182,7 @@ export default function Home() {
         <div className="absolute inset-0 bg-black bg-opacity-50"></div>
         <div className="relative z-10 container mx-auto px-3">
           <h2 className="text-3xl font-bold text-blancGlacialNeutre mb-12 text-center">
-            Événements à l&apos;affiche
+            Événements à l'affiche
           </h2>
 
           {upcomingEvents.length > 0 ? (
@@ -236,7 +228,7 @@ export default function Home() {
             </div>
           ) : (
             <p className="text-blancGlacialNeutre text-xl text-center py-12">
-              Aucun événement à l&apos;affiche pour le moment.
+              Aucun événement à l'affiche pour le moment.
             </p>
           )}
         </div>
@@ -294,7 +286,7 @@ export default function Home() {
             <h2 className="text-4xl font-bold mb-3">Statistiques des Billets</h2>
           </div>
 
-          {loading ? (
+          {eventsLoading ? (
             <div className="text-center py-12">
               <div className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-orMetallique mr-3"></div>
               <span>Chargement des données...</span>

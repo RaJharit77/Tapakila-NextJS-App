@@ -6,6 +6,8 @@ import { toast } from "react-hot-toast";
 import { useEffect, useState } from "react";
 import { FaArrowLeft, FaTicketAlt } from "react-icons/fa";
 import TicketTable from "@/components/TicketTable";
+import { useEventDetailStore } from "@/stores/eventDetailStore";
+import useSWR from "swr";
 
 interface Event {
     event_id: string;
@@ -14,6 +16,7 @@ interface Event {
     event_date: string;
     event_place: string;
     event_image: string;
+    event_category?: string;
     tickets: {
         ticket_id: string;
         ticket_type: string;
@@ -22,42 +25,62 @@ interface Event {
     }[];
 }
 
+const fetcher = async (url: string) => {
+    const response = await fetch(url);
+    if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Événement non trouvé");
+    }
+    return response.json();
+};
+
 export default function EventPage() {
-    const [event, setEvent] = useState<Event | null>(null);
-    const [error, setError] = useState<string | null>(null);
-    const [loading, setLoading] = useState<boolean>(true);
     const [isLoggedIn, setIsLoggedIn] = useState(false);
     const { eventId } = useParams() as { eventId: string };
     const router = useRouter();
+    const { event, setEvent, setLoading, setError, clearEvent } = useEventDetailStore();
+
+    const { data, error, isLoading } = useSWR<Event>(
+        eventId ? `/api/events/${eventId}` : null,
+        fetcher,
+        {
+            refreshInterval: 30000,
+            revalidateOnFocus: true,
+            revalidateOnReconnect: true,
+            onSuccess: (data: Event) => {
+                setEvent({
+                    id: data.event_id,
+                    name: data.event_name,
+                    description: data.event_description,
+                    date: data.event_date,
+                    location: data.event_place,
+                    imageUrl: data.event_image,
+                    category: data.event_category || "Autres",
+                    tickets: data.tickets.map(ticket => ({
+                        id: ticket.ticket_id,
+                        type: ticket.ticket_type,
+                        price: ticket.ticket_price,
+                        status: ticket.ticket_status
+                    }))
+                });
+                setLoading(false);
+                setError(null);
+            },
+            onError: (err) => {
+                setError(err.message);
+                setLoading(false);
+            }
+        }
+    );
 
     useEffect(() => {
         const user = localStorage.getItem("user");
         setIsLoggedIn(!!user);
 
-        async function fetchEvent() {
-            if (!eventId) {
-                setError("Event ID is missing");
-                setLoading(false);
-                return;
-            }
-
-            try {
-                const response = await fetch(`/api/events/${eventId}`);
-                if (!response.ok) {
-                    const errorData = await response.json();
-                    throw new Error(errorData.error || "Événement non trouvé");
-                }
-                const eventData = await response.json();
-                setEvent(eventData);
-            } catch (err) {
-                console.error(err);
-                setError(err instanceof Error ? err.message : "Une erreur s'est produite");
-            } finally {
-                setLoading(false);
-            }
-        }
-        fetchEvent();
-    }, [eventId]);
+        return () => {
+            clearEvent();
+        };
+    }, []);
 
     const handleReservationClick = () => {
         if (!isLoggedIn) {
@@ -80,7 +103,7 @@ export default function EventPage() {
         router.push(`/dashboard/reservations?eventId=${eventId}`);
     };
 
-    if (loading) {
+    if (isLoading) {
         return (
             <div className="min-h-screen flex items-center justify-center relative">
                 <Image
@@ -112,7 +135,7 @@ export default function EventPage() {
                 />
                 <div className="absolute inset-0 bg-black bg-opacity-70 pointer-events-none"></div>
                 <div className="relative z-10 text-center text-red-500 text-xl">
-                    {error || "Événement non trouvé"}
+                    {error?.message || "Événement non trouvé"}
                 </div>
             </div>
         );
@@ -143,8 +166,8 @@ export default function EventPage() {
                     <div className="w-full h-[400px] sm:h-[500px] relative mb-8">
                         <div className="relative w-full h-full rounded-xl overflow-hidden">
                             <Image
-                                src={event.event_image}
-                                alt={event.event_name}
+                                src={event.imageUrl}
+                                alt={event.name}
                                 fill
                                 className="object-contain"
                                 style={{ objectPosition: 'center' }}
@@ -155,10 +178,10 @@ export default function EventPage() {
                     </div>
 
                     <h1 className="text-3xl font-bold text-bleuNuit mb-6">
-                        {event.event_name}
+                        {event.name}
                     </h1>
                     <p className="text-lg text-grisAnthracite mb-8">
-                        {event.event_description}
+                        {event.description}
                     </p>
 
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -168,12 +191,12 @@ export default function EventPage() {
                                     Date et Heure
                                 </h2>
                                 <p className="text-grisAnthracite">
-                                    {new Date(event.event_date).toLocaleDateString('fr-FR', {
+                                    {new Date(event.date).toLocaleDateString('fr-FR', {
                                         day: 'numeric',
                                         month: 'long',
                                         year: 'numeric'
                                     })} -{" "}
-                                    {new Date(event.event_date).toLocaleTimeString('fr-FR', {
+                                    {new Date(event.date).toLocaleTimeString('fr-FR', {
                                         hour: '2-digit',
                                         minute: '2-digit'
                                     })}
@@ -183,7 +206,7 @@ export default function EventPage() {
                                 <h2 className="text-xl font-semibold text-bleuNuit mb-2">
                                     Lieu
                                 </h2>
-                                <p className="text-grisAnthracite">{event.event_place}</p>
+                                <p className="text-grisAnthracite">{event.location}</p>
                             </div>
                         </div>
 
@@ -193,12 +216,12 @@ export default function EventPage() {
                             </h2>
 
                             <TicketTable
-                                tickets={event.tickets.map(ticket => ({
-                                    id: ticket.ticket_id,
-                                    type: ticket.ticket_type,
-                                    price: ticket.ticket_price,
-                                    status: ticket.ticket_status,
-                                }))}
+                                tickets={event.tickets?.map(ticket => ({
+                                    id: ticket.id,
+                                    type: ticket.type,
+                                    price: ticket.price,
+                                    status: ticket.status,
+                                })) || []}
                             />
 
                             <button

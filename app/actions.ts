@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { neon } from "@neondatabase/serverless";
 import { Type } from "@prisma/client";
 
+
 export async function getData() {
     if (!process.env.DATABASE_URL) {
         throw new Error("DATABASE_URL is not defined");
@@ -12,6 +13,21 @@ export async function getData() {
     const data = await sql`...`;
     return data;
 }
+
+const checkTickets = async (eventId: string, eventName: string) => {
+   
+    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
+    const apiUrl = `${baseUrl}/api/tickets/update`;
+  
+    await fetch(apiUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ eventId, eventName }), 
+    });
+  };
+
 
 export async function BookATicket({ data }: { data: { userId: string, ticketNumber: number, requestType: "CANCEL" | "BOOK", ticketType: Type, eventId: string } }) {
     try {
@@ -69,7 +85,7 @@ export async function BookATicket({ data }: { data: { userId: string, ticketNumb
                     user_id: userId
                 }
             });
-
+            await checkTickets(eventId, event.event_name);
             return {
                 status: 200,
                 success: true,

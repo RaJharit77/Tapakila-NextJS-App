@@ -8,6 +8,7 @@ import { FaTicketAlt, FaSpinner, FaCheckCircle, FaTimesCircle } from "react-icon
 import { toast } from "react-hot-toast";
 import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
+import useSWR from 'swr';
 
 interface Ticket {
     id: string;
@@ -21,6 +22,8 @@ interface Ticket {
     event_date?: string;
     event_place?: string;
 }
+
+const fetcher = (url: string) => fetch(url).then(res => res.json());
 
 export default function ReservationsPage() {
     const { data: session, status } = useSession();
@@ -38,6 +41,60 @@ export default function ReservationsPage() {
     const [isEventPast, setIsEventPast] = useState(false);
 
     const eventId = searchParams.get("eventId") || "";
+
+    const { data: ticketsData, error: ticketsError } = useSWR(
+        eventId ? `/api/tickets?idEvent=${eventId}` : "/api/tickets",
+        fetcher,
+        {
+            refreshInterval: 5000,
+            revalidateOnFocus: true,
+            revalidateOnReconnect: true,
+            onSuccess: (data) => {
+                const formattedTickets = data.tickets?.map((ticket: any) => ({
+                    id: ticket.ticket_id,
+                    type: ticket.ticket_type,
+                    price: ticket.ticket_price,
+                    status: ticket.ticket_status,
+                    user_id: ticket.user_id,
+                    event_id: ticket.event_id
+                })) || [];
+                setTickets(formattedTickets);
+                setLoading(false);
+            },
+            onError: (error) => {
+                console.error("Error fetching tickets:", error);
+                toast.error("Erreur lors du chargement des données");
+                setLoading(false);
+            }
+        }
+    );
+
+    const { data: eventData, error: eventError } = useSWR(
+        eventId ? `/api/events/${eventId}` : null,
+        fetcher,
+        {
+            refreshInterval: 5000,
+            revalidateOnFocus: true,
+            revalidateOnReconnect: true,
+            onSuccess: (data) => {
+                if (data) {
+                    setEventDetails({
+                        name: data.event_name,
+                        image: data.event_image,
+                        date: data.event_date,
+                        place: data.event_place
+                    });
+                    const eventDate = new Date(data.event_date);
+                    const now = new Date();
+                    setIsEventPast(eventDate < now);
+                }
+            },
+            onError: (error) => {
+                console.error("Error fetching event:", error);
+                toast.error("Erreur lors du chargement des données");
+            }
+        }
+    );
 
     useEffect(() => {
         if (!eventId) {
@@ -84,7 +141,7 @@ export default function ReservationsPage() {
             window.removeEventListener('storage', checkAuth);
         };
     }, [status, session]);
-
+/** 
     useEffect(() => {
         async function fetchData() {
             try {
@@ -133,6 +190,8 @@ export default function ReservationsPage() {
         fetchData();
     }, [eventId]);
 
+>>>>>>> 660241c59daf0b98f958542607f7e946d015a9e0
+ */
     const availableTickets = tickets.filter(t => t.status === "AVAILABLE");
     const userTickets = tickets.filter(t =>
         t.user_id === session?.user?.id ||

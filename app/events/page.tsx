@@ -5,6 +5,7 @@ import { useEventStore } from "@/stores/eventStore";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import Image from "next/image";
+import useSWR from "swr";
 
 interface Event {
     id: string;
@@ -26,6 +27,23 @@ interface ApiEvent {
     event_category?: string;
 }
 
+const fetcher = async (url: string) => {
+    const response = await fetch(url);
+    if (!response.ok) {
+        throw new Error("Erreur lors du chargement des événements");
+    }
+    const rawEvents: ApiEvent[] = await response.json();
+    return rawEvents.map((event) => ({
+        id: event.event_id,
+        name: event.event_name,
+        date: new Date(event.event_date).toISOString(),
+        location: event.event_place,
+        description: event.event_description,
+        imageUrl: event.event_image,
+        category: event.event_category || "Autres",
+    }));
+};
+
 export default function EventsPage() {
     const { events, setEvents } = useEventStore();
     const [isLoading, setIsLoading] = useState(true);
@@ -34,7 +52,7 @@ export default function EventsPage() {
     const locationQuery = searchParams.get("location") || "";
     const dateQuery = searchParams.get("date") || "";
     const categoryQuery = searchParams.get("category") || "";
-
+  
     useEffect(() => {
         async function fetchEvents() {
             try {
@@ -47,13 +65,25 @@ export default function EventsPage() {
                 if (dateQuery) params.append("date", dateQuery);
                 if (categoryQuery) params.append("category", categoryQuery);
 
-                if (params.toString()) url += `?${params.toString()}`;
+    if (nameQuery) params.append("name", nameQuery);
+    if (locationQuery) params.append("location", locationQuery);
+    if (dateQuery) params.append("date", dateQuery);
+    if (categoryQuery) params.append("category", categoryQuery);
 
-                const response = await fetch(url);
-                if (!response.ok) {
-                    throw new Error("Erreur lors du chargement des événements");
-                }
+    if (params.toString()) url += `?${params.toString()}`;
 
+    const response = await fetch(url);
+       if (!response.ok) {
+            throw new Error("Erreur lors du chargement des événements");
+          }
+
+    const { data: events, error, isLoading, mutate } = useSWR<Event[]>(url, fetcher, {
+        refreshInterval: 5000, 
+        revalidateOnFocus: true, 
+        revalidateOnReconnect: true, 
+        dedupingInterval: 2000,
+    });
+              
                 const rawEvents: ApiEvent[] = await response.json();
                 const formattedEvents: Event[] = rawEvents.map((event) => ({
                     id: event.event_id,
@@ -75,13 +105,13 @@ export default function EventsPage() {
         fetchEvents();
     }, [setEvents, nameQuery, locationQuery, dateQuery, categoryQuery]);
 
-    const eventsByCategory = events.reduce((acc: Record<string, Event[]>, event) => {
+    const eventsByCategory = events?.reduce((acc: Record<string, Event[]>, event) => {
         if (!acc[event.category]) {
             acc[event.category] = [];
         }
         acc[event.category].push(event);
         return acc;
-    }, {});
+    }, {}) || {};
 
     return (
         <div className="min-h-screen py-16 px-4 sm:px-6 lg:px-8 relative">

@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
-import { Status, Type } from "@prisma/client";
+import { Status, Type, Ticket, Prisma } from "@prisma/client";
+import { randomUUID } from "crypto";
 import { NextResponse } from "next/server";
 
 export async function GET(request: Request) {
@@ -61,34 +62,92 @@ export async function GET(request: Request) {
 //  ========== ADMIN ==========
 export async function DELETE(request: Request) {
   try {
-    const { ticketNumber } = await request.json()
+    const { searchParams } = new URL(request.url);
+    const ticketNumber = searchParams.get('ticketNumber');
+    const eventId = searchParams.get('event_id');
+    const ticketType = searchParams.get('ticket_type');
+
+    if (!ticketNumber || !eventId) {
+      return new NextResponse(
+        JSON.stringify({ error: "Paramètres requis manquants : ticketNumber ou event_id" }),
+        { status: 400 }
+      );
+    }
+
+    const numRequestedTickets = Number(ticketNumber);
+    if (isNaN(numRequestedTickets)) {
+      return new NextResponse(
+        JSON.stringify({ error: "Le paramètre ticketNumber doit être un nombre valide" }),
+        { status: 400 }
+      );
+    }
+
+
+    const whereClause: any = {
+      event_id: eventId,
+      ticket_status: "AVAILABLE"
+    };
+
+    if (ticketType) {
+      whereClause.ticket_type = ticketType;
+    }
+
+
+    const availableTickets = await prisma.ticket.count({
+      where: whereClause
+    });
+
+    if (availableTickets < numRequestedTickets) {
+      return new NextResponse(
+        JSON.stringify({
+          error: "Stock insuffisant",
+          details: {
+            requested: numRequestedTickets,
+            available: availableTickets,
+            ticketType: ticketType || "Tous types"
+          }
+        }),
+        { status: 409 } 
+      );
+    }
+
+
     const foundTickets = await prisma.ticket.findMany({
-      take: Number(ticketNumber),
-      where: {
-        ticket_status: "AVAILABLE"
-      }
-    })
+      take: numRequestedTickets,
+      where: whereClause,
 
-    const deleteTickets = await prisma.ticket.deleteMany({
-      where: {
-        ticket_id: {
-          in: foundTickets.map(t => t.ticket_id)
-        }
-      }
-    })
+    });
 
-    return new NextResponse(JSON.stringify(deleteTickets), { status: 200 });
+  
+    const deleteResult = await prisma.ticket.deleteMany({
+      where: {
+        ticket_id: { in: foundTickets.map(t => t.ticket_id) }
+      }
+    });
+
+    return new NextResponse(JSON.stringify({
+      success: true,
+      deletedCount: deleteResult.count,
+      remaining: availableTickets - deleteResult.count,
+      eventId,
+      ticketTypeFilter: ticketType || "Tous types"
+    }), { status: 200 });
 
   } catch (e) {
-    console.error("Error while deleting the ticket", e)
-    return new NextResponse(JSON.stringify({ error: "Repository error" }),
+    console.error("Erreur :", e);
+    return new NextResponse(
+      JSON.stringify({ 
+        error: "Erreur lors de la suppression",
+        details: e instanceof Error ? e.message : "Erreur inconnue"
+      }),
       { status: 500 }
     );
-
   } finally {
     await prisma.$disconnect();
   }
 }
+
+// ----------------------------------------------------------------------------
 
 export async function POST(request: Request) {
   try {
@@ -99,24 +158,10 @@ export async function POST(request: Request) {
         status: 400 
       });
     }
-
-    const lastTicket = await prisma.ticket.findFirst({
-      where: {
-        event_id: idEvent,
-        ticket_id: { startsWith: idEvent + "TKT" }
-      },
-      orderBy: { ticket_creation_date: "desc" },
-      select: { ticket_id: true }
-    });
-
-    const lastId = lastTicket 
-      ? parseInt(lastTicket.ticket_id.split(idEvent + "TKT")[1] || "0")
-      : 0;
-
-    const ticketsToCreate = [];
+     const ticketsToCreate = [];
     for (let i = 1; i <= ticketNumber; i++) {
       ticketsToCreate.push({
-        ticket_id: `${idEvent}TKT${lastId + i}`,
+        ticket_id: `${idEvent}TKT${randomUUID().split("-")}`,
         ticket_status: "AVAILABLE" as Status,
         event_id: idEvent,
         ticket_type,
@@ -147,5 +192,3 @@ export async function POST(request: Request) {
     await prisma.$disconnect();
   }
 }
-
-

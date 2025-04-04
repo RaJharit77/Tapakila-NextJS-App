@@ -49,6 +49,8 @@ export async function PUT(request: Request, { params }: { params: { eventId: str
         const { eventId } = await params
         const body = await request.json()
 
+        console.log(body);
+        
         const event = await prisma.event.findUnique({
             where: {
                 event_id: eventId
@@ -91,6 +93,7 @@ export async function DELETE(
     request: Request,
     { params }: { params: { eventId: string } }
   ) {
+
     const { eventId } = await params;
     
     if (!eventId) {
@@ -133,3 +136,4 @@ export async function DELETE(
       await prisma.$disconnect();
     }
   }
+
