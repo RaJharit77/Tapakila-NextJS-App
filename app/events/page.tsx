@@ -3,7 +3,7 @@
 import EventCard from "@/components/EventCard";
 import { useEventStore } from "@/stores/eventStore";
 import { useSearchParams } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 
 interface Event {
@@ -28,6 +28,7 @@ interface ApiEvent {
 
 export default function EventsPage() {
     const { events, setEvents } = useEventStore();
+    const [isLoading, setIsLoading] = useState(true);
     const searchParams = useSearchParams();
     const nameQuery = searchParams.get("name") || "";
     const locationQuery = searchParams.get("location") || "";
@@ -37,6 +38,7 @@ export default function EventsPage() {
     useEffect(() => {
         async function fetchEvents() {
             try {
+                setIsLoading(true);
                 let url = "/api/events";
                 const params = new URLSearchParams();
 
@@ -66,6 +68,8 @@ export default function EventsPage() {
                 setEvents(formattedEvents);
             } catch (error) {
                 console.error("Erreur de chargement:", error);
+            } finally {
+                setIsLoading(false);
             }
         }
         fetchEvents();
@@ -96,7 +100,35 @@ export default function EventsPage() {
                     Événements
                 </h1>
 
-                {Object.entries(eventsByCategory).length > 0 ? (
+                {isLoading ? (
+                    <div className="flex justify-center items-center h-64">
+                        <div className="flex flex-col items-center">
+                            <svg
+                                className="animate-spin h-12 w-12 text-blancGlacialNeutre mb-4"
+                                xmlns="http://www.w3.org/2000/svg"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                            >
+                                <circle
+                                    className="opacity-25"
+                                    cx="12"
+                                    cy="12"
+                                    r="10"
+                                    stroke="currentColor"
+                                    strokeWidth="4"
+                                ></circle>
+                                <path
+                                    className="opacity-75"
+                                    fill="currentColor"
+                                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                                ></path>
+                            </svg>
+                            <p className="text-blancGlacialNeutre text-xl">
+                                Chargement des événements...
+                            </p>
+                        </div>
+                    </div>
+                ) : Object.entries(eventsByCategory).length > 0 ? (
                     Object.entries(eventsByCategory).map(([category, categoryEvents]) => (
                         <section key={category} className="mb-12">
                             <h2 className="text-3xl font-bold text-bleuNuit mb-6">
