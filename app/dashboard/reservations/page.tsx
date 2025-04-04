@@ -141,7 +141,7 @@ export default function ReservationsPage() {
             window.removeEventListener('storage', checkAuth);
         };
     }, [status, session]);
-/** 
+
     useEffect(() => {
         async function fetchData() {
             try {
@@ -190,8 +190,6 @@ export default function ReservationsPage() {
         fetchData();
     }, [eventId]);
 
->>>>>>> 660241c59daf0b98f958542607f7e946d015a9e0
- */
     const availableTickets = tickets.filter(t => t.status === "AVAILABLE");
     const userTickets = tickets.filter(t =>
         t.user_id === session?.user?.id ||
