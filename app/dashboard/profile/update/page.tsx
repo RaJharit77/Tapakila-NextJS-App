@@ -126,10 +126,7 @@ const UpdateProfilePage = () => {
     }
 
     return (
-        <div
-            className="min-h-screen p-6 bg-cover bg-center py-36"
-            style={{ backgroundImage: "url('/img/bgProfileUpdate.jpg')" }}
-        >
+        <div className="min-h-screen p-6 bg-cover bg-center py-36" style={{ backgroundImage: "url('/img/bgProfileUpdate.jpg')" }}>
             <ToastContainer />
             <div className="max-w-lg mx-auto bg-gray-900 bg-opacity-70 p-8 rounded-xl shadow-xl">
                 <h1 className="text-3xl font-bold mb-6 text-center text-blancCasse">Mettre à jour le profil</h1>
@@ -146,23 +143,25 @@ const UpdateProfilePage = () => {
                         />
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-orMetallique">Adresse</label>
+                        <label className="block text-sm font-medium text-orMetallique">Adresse (facultatif)</label>
                         <input
                             type="text"
                             name="user_address"
                             value={formData.user_address}
                             onChange={handleChange}
                             className="mt-1 block w-full px-4 py-2 bg-bleuNuit border border-gray-700 rounded-lg shadow-sm focus:outline-none focus:ring-bleuElec focus:border-bleuElec"
+                            placeholder="Votre adresse"
                         />
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-orMetallique">Ville</label>
+                        <label className="block text-sm font-medium text-orMetallique">Ville (facultatif)</label>
                         <input
                             type="text"
                             name="user_city"
                             value={formData.user_city}
                             onChange={handleChange}
                             className="mt-1 block w-full px-4 py-2 bg-bleuNuit border border-gray-700 rounded-lg shadow-sm focus:outline-none focus:ring-bleuElec focus:border-bleuElec"
+                            placeholder="Votre ville"
                         />
                     </div>
                     <div className="flex space-x-4">

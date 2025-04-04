@@ -1,7 +1,9 @@
 "use client";
 
 import EventCard from "@/components/EventCard";
+import { useEventStore } from "@/stores/eventStore";
 import { useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import useSWR from "swr";
 
@@ -43,14 +45,25 @@ const fetcher = async (url: string) => {
 };
 
 export default function EventsPage() {
+    const { events, setEvents } = useEventStore();
+    const [isLoading, setIsLoading] = useState(true);
     const searchParams = useSearchParams();
     const nameQuery = searchParams.get("name") || "";
     const locationQuery = searchParams.get("location") || "";
     const dateQuery = searchParams.get("date") || "";
     const categoryQuery = searchParams.get("category") || "";
+  
+    useEffect(() => {
+        async function fetchEvents() {
+            try {
+                setIsLoading(true);
+                let url = "/api/events";
+                const params = new URLSearchParams();
 
-    let url = "/api/events";
-    const params = new URLSearchParams();
+                if (nameQuery) params.append("name", nameQuery);
+                if (locationQuery) params.append("location", locationQuery);
+                if (dateQuery) params.append("date", dateQuery);
+                if (categoryQuery) params.append("category", categoryQuery);
 
     if (nameQuery) params.append("name", nameQuery);
     if (locationQuery) params.append("location", locationQuery);
@@ -59,12 +72,38 @@ export default function EventsPage() {
 
     if (params.toString()) url += `?${params.toString()}`;
 
+    const response = await fetch(url);
+       if (!response.ok) {
+            throw new Error("Erreur lors du chargement des événements");
+          }
+
     const { data: events, error, isLoading, mutate } = useSWR<Event[]>(url, fetcher, {
         refreshInterval: 5000, 
         revalidateOnFocus: true, 
         revalidateOnReconnect: true, 
         dedupingInterval: 2000,
     });
+              
+                const rawEvents: ApiEvent[] = await response.json();
+                const formattedEvents: Event[] = rawEvents.map((event) => ({
+                    id: event.event_id,
+                    name: event.event_name,
+                    date: new Date(event.event_date).toISOString(),
+                    location: event.event_place,
+                    description: event.event_description,
+                    imageUrl: event.event_image,
+                    category: event.event_category || "Autres",
+                }));
+
+                setEvents(formattedEvents);
+            } catch (error) {
+                console.error("Erreur de chargement:", error);
+            } finally {
+                setIsLoading(false);
+            }
+        }
+        fetchEvents();
+    }, [setEvents, nameQuery, locationQuery, dateQuery, categoryQuery]);
 
     const eventsByCategory = events?.reduce((acc: Record<string, Event[]>, event) => {
         if (!acc[event.category]) {
@@ -92,12 +131,32 @@ export default function EventsPage() {
                 </h1>
 
                 {isLoading ? (
-                    <div className="text-center text-blancGlacialNeutre text-xl mt-44">
-                        Chargement des événements...
-                    </div>
-                ) : error ? (
-                    <div className="text-center text-red-500 text-xl mt-44">
-                        Erreur lors du chargement des événements
+                    <div className="flex justify-center items-center h-64">
+                        <div className="flex flex-col items-center">
+                            <svg
+                                className="animate-spin h-12 w-12 text-blancGlacialNeutre mb-4"
+                                xmlns="http://www.w3.org/2000/svg"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                            >
+                                <circle
+                                    className="opacity-25"
+                                    cx="12"
+                                    cy="12"
+                                    r="10"
+                                    stroke="currentColor"
+                                    strokeWidth="4"
+                                ></circle>
+                                <path
+                                    className="opacity-75"
+                                    fill="currentColor"
+                                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                                ></path>
+                            </svg>
+                            <p className="text-blancGlacialNeutre text-xl">
+                                Chargement des événements...
+                            </p>
+                        </div>
                     </div>
                 ) : Object.entries(eventsByCategory).length > 0 ? (
                     Object.entries(eventsByCategory).map(([category, categoryEvents]) => (

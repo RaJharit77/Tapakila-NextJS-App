@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { FaTicketAlt } from "react-icons/fa";
+import Image from "next/image";
 
 interface Ticket {
     ticket_id: string;
@@ -124,7 +125,29 @@ const ProfilePage = () => {
     if (loading) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-cover bg-center" style={{ backgroundImage: "url('/img/bgProfile.jpg')" }}>
-                <div className="text-white text-2xl font-bold">Chargement en cours...</div>
+                <div className="flex flex-col items-center">
+                    <svg
+                        className="animate-spin h-12 w-12 text-blancCasse mb-4"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                    >
+                        <circle
+                            className="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                        ></circle>
+                        <path
+                            className="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        ></path>
+                    </svg>
+                    <p className="text-blancCasse text-2xl font-bold">Chargement en cours...</p>
+                </div>
             </div>
         );
     }
@@ -158,19 +181,19 @@ const ProfilePage = () => {
                         <div>
                             <label className="block text-sm font-medium text-orMetallique">Adresse</label>
                             <p className="mt-1 text-lg text-blancCasse">
-                                {user.user_address || "Non renseignée"}
+                                {user.user_address || "Non renseign&eacute;e"}
                             </p>
                         </div>
                         <div>
                             <label className="block text-sm font-medium text-orMetallique">Ville</label>
                             <p className="mt-1 text-lg text-blancCasse">
-                                {user.user_city || "Non renseignée"}
+                                {user.user_city || "Non renseign&eacute;e"}
                             </p>
                         </div>
                     </div>
                     <div className="space-y-4">
                         <div>
-                            <label className="block text-sm font-medium text-orMetallique">Date d'adhésion</label>
+                            <label className="block text-sm font-medium text-orMetallique">Date d&apos;adh&eacute;sion</label>
                             <p className="mt-1 text-lg text-blancCasse">
                                 {new Date(user.user_first_login_date).toLocaleDateString('fr-FR', {
                                     day: 'numeric',
@@ -182,7 +205,7 @@ const ProfilePage = () => {
                         <div>
                             <label className="block text-sm font-medium text-orMetallique">Total de billets</label>
                             <p className="mt-1 text-lg text-blancCasse">
-                                {user.tickets?.length || 0} billet(s)
+                                {user.tickets?.length || 0} billet{user.tickets?.length !== 1 ? 's' : ''}
                             </p>
                         </div>
                     </div>
@@ -200,10 +223,11 @@ const ProfilePage = () => {
                                 <div key={key} className="bg-gray-800 bg-opacity-50 rounded-lg p-4">
                                     <div className="flex flex-col md:flex-row gap-4">
                                         <div className="w-full md:w-1/4 h-40 relative rounded-lg overflow-hidden">
-                                            <img
+                                            <Image
                                                 src={summary.event.image}
                                                 alt={summary.event.name}
-                                                className="w-full h-full object-cover"
+                                                fill
+                                                className="object-cover"
                                             />
                                         </div>
                                         <div className="w-full md:w-3/4">
@@ -252,12 +276,12 @@ const ProfilePage = () => {
                         </div>
                     ) : (
                         <div className="text-center py-8">
-                            <p className="text-blancCasse text-lg">Vous n'avez pas encore acheté de billets.</p>
+                            <p className="text-blancCasse text-lg">Vous n&apos;avez pas encore achet&eacute; de billets.</p>
                             <button
                                 onClick={() => router.push("/events")}
                                 className="mt-4 px-6 py-2 bg-bleuElec text-blancCasse rounded-lg hover:bg-bleuNuit hover:text-orMetallique transition duration-300"
                             >
-                                Voir les événements
+                                Voir les &eacute;v&eacute;nements
                             </button>
                         </div>
                     )}
@@ -268,13 +292,13 @@ const ProfilePage = () => {
                         onClick={() => router.push("/dashboard/profile/update")}
                         className="px-6 py-3 bg-bleuElec text-blancCasse rounded-lg hover:bg-bleuNuit hover:text-orMetallique transition duration-300"
                     >
-                        Mettre à jour le profil
+                        Mettre &agrave; jour le profil
                     </button>
                     <button
                         onClick={() => router.push("/")}
                         className="px-6 py-3 bg-bleuElec text-blancCasse rounded-lg hover:bg-bleuNuit hover:text-orMetallique transition duration-300"
                     >
-                        Retour à l'accueil
+                        Retour &agrave; l&apos;accueil
                     </button>
                 </div>
             </div>
