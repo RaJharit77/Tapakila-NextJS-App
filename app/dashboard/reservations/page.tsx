@@ -35,6 +35,7 @@ export default function ReservationsPage() {
     const [reservationDetails, setReservationDetails] = useState<any>(null);
     const [eventDetails, setEventDetails] = useState<any>(null);
     const [isAuthenticated, setIsAuthenticated] = useState(false);
+    const [isEventPast, setIsEventPast] = useState(false);
 
     const eventId = searchParams.get("eventId") || "";
 
@@ -55,7 +56,7 @@ export default function ReservationsPage() {
             const localUser = localStorage.getItem('user');
             const localUserId = localStorage.getItem('user_id');
             let userId = session?.user?.id;
-        
+
             if (!userId && localUser) {
                 try {
                     const userData = JSON.parse(localUser);
@@ -64,10 +65,10 @@ export default function ReservationsPage() {
                     console.error("Failed to parse user data from localStorage", e);
                 }
             }
-        
+
             const isAuth = status === "authenticated" || !!localUser;
             setIsAuthenticated(isAuth);
-        
+
             console.log("Auth status:", {
                 nextAuthStatus: status,
                 hasLocalUser: !!localUser,
@@ -114,6 +115,10 @@ export default function ReservationsPage() {
                             date: eventData.event_date,
                             place: eventData.event_place
                         });
+
+                        const eventDate = new Date(eventData.event_date);
+                        const now = new Date();
+                        setIsEventPast(eventDate < now);
                     }
                 }
 
@@ -335,15 +340,11 @@ export default function ReservationsPage() {
                                 </div>
                                 <div className="flex justify-between">
                                     <span>Prix unitaire:</span>
-                                    <span className="font-semibold text-blancCasse">
-                                        {isNaN(reservationDetails.price) ? '0' : reservationDetails.price.toLocaleString()} Ar
-                                    </span>
+                                    <span className="font-semibold text-blancCasse">{reservationDetails.price.toLocaleString()} Ar</span>
                                 </div>
                                 <div className="flex justify-between border-t border-gray-600 pt-2">
                                     <span>Total:</span>
-                                    <span className="font-bold text-lg text-blancCasse">
-                                        {isNaN(reservationDetails.total) ? '0' : reservationDetails.total.toLocaleString()} Ar
-                                    </span>
+                                    <span className="font-bold text-lg text-blancCasse">{(reservationDetails.total).toLocaleString()} Ar</span>
                                 </div>
                             </div>
                         </div>
@@ -439,15 +440,11 @@ export default function ReservationsPage() {
                                     </div>
                                     <div className="flex justify-between">
                                         <span>Prix unitaire:</span>
-                                        <span className="font-semibold text-blancCasse">
-                                            {isNaN(reservationDetails.price) ? '0' : reservationDetails.price.toLocaleString()} Ar
-                                        </span>
+                                        <span className="font-semibold text-blancCasse">{reservationDetails.price.toLocaleString()} Ar</span>
                                     </div>
                                     <div className="flex justify-between border-t border-gray-600 pt-2">
                                         <span>Total:</span>
-                                        <span className="font-bold text-lg text-blancCasse">
-                                            {isNaN(reservationDetails.total) ? '0' : reservationDetails.total.toLocaleString()} Ar
-                                        </span>
+                                        <span className="font-bold text-lg text-blancCasse">{(reservationDetails.total).toLocaleString()} Ar</span>
                                     </div>
                                 </div>
                             </div>
@@ -540,12 +537,9 @@ export default function ReservationsPage() {
                                         type="number"
                                         min="1"
                                         max="5"
-                                        value={isNaN(ticketCount) ? 1 : ticketCount}
-                                        onChange={(e) => {
-                                            const value = parseInt(e.target.value);
-                                            setTicketCount(isNaN(value) ? 1 : value);
-                                        }}
-                                        className="w-full p-2 border border-gray-900 rounded-md bg-gray-900 text-blancGlacial"
+                                        value={ticketCount}
+                                        onChange={(e) => setTicketCount(parseInt(e.target.value))}
+                                        className="w-full p-2 border border-gray-900 rounded-md bg-gray-900 text-white"
                                     />
                                 </div>
 
@@ -574,57 +568,61 @@ export default function ReservationsPage() {
                                 Annuler des réservations
                             </h2>
 
-                            <div className="space-y-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-blancCasse mb-1">
-                                        Type de billet
-                                    </label>
-                                    <select
-                                        value={selectedType}
-                                        onChange={(e) => setSelectedType(e.target.value)}
-                                        className="w-full p-2 border border-gray-900 rounded-md bg-gray-900 text-white"
+                            {isEventPast ? (
+                                <div className="text-center py-4 text-orange-300">
+                                    <FaTimesCircle className="inline-block text-2xl mb-2" />
+                                    <p>Les annulations ne sont pas disponibles pour les événements passés</p>
+                                </div>
+                            ) : (
+                                <div className="space-y-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-blancCasse mb-1">
+                                            Type de billet
+                                        </label>
+                                        <select
+                                            value={selectedType}
+                                            onChange={(e) => setSelectedType(e.target.value)}
+                                            className="w-full p-2 border border-gray-900 rounded-md bg-gray-900 text-white"
+                                        >
+                                            <option value="EARLY_BIRD">Early Bird</option>
+                                            <option value="STANDARD">Standard</option>
+                                            <option value="VIP">VIP</option>
+                                        </select>
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-sm font-medium text-blancCasse mb-1">
+                                            Nombre de billets à annuler
+                                        </label>
+                                        <input
+                                            type="number"
+                                            min="1"
+                                            max="5"
+                                            value={ticketCount}
+                                            onChange={(e) => setTicketCount(parseInt(e.target.value))}
+                                            className="w-full p-2 border border-gray-900 rounded-md bg-gray-900 text-blancGlacial"
+                                        />
+                                    </div>
+
+                                    <button
+                                        onClick={handleCancelTickets}
+                                        disabled={isBooking || !isAuthenticated || isEventPast}
+                                        className={`w-full py-2 px-4 rounded-md transition-colors ${isBooking || !isAuthenticated || isEventPast
+                                            ? 'bg-bleuElec/50 text-blancGlacial/50 cursor-not-allowed'
+                                            : 'bg-bleuElec text-blancGlacial hover:bg-gray-900 hover:text-orMetallique'
+                                            }`}
                                     >
-                                        <option value="EARLY_BIRD">Early Bird</option>
-                                        <option value="STANDARD">Standard</option>
-                                        <option value="VIP">VIP</option>
-                                    </select>
+                                        {isBooking ? (
+                                            <span className="flex items-center justify-center">
+                                                <FaSpinner className="animate-spin mr-2" />
+                                                Annulation en cours...
+                                            </span>
+                                        ) : (
+                                            "Annuler"
+                                        )}
+                                    </button>
                                 </div>
-
-                                <div>
-                                    <label className="block text-sm font-medium text-blancCasse mb-1">
-                                        Nombre de billets à annuler
-                                    </label>
-                                    <input
-                                        type="number"
-                                        min="1"
-                                        max="5"
-                                        value={isNaN(ticketCount) ? 1 : ticketCount}
-                                        onChange={(e) => {
-                                            const value = parseInt(e.target.value);
-                                            setTicketCount(isNaN(value) ? 1 : value);
-                                        }}
-                                        className="w-full p-2 border border-gray-900 rounded-md bg-gray-900 text-blancGlacial"
-                                    />
-                                </div>
-
-                                <button
-                                    onClick={handleCancelTickets}
-                                    disabled={isBooking || !isAuthenticated}
-                                    className={`w-full py-2 px-4 rounded-md transition-colors ${isBooking || !isAuthenticated
-                                        ? 'bg-bleuElec/50 text-blancGlacial/50 cursor-not-allowed'
-                                        : 'bg-bleuElec text-blancGlacial hover:bg-gray-900 hover:text-orMetallique'
-                                        }`}
-                                >
-                                    {isBooking ? (
-                                        <span className="flex items-center justify-center">
-                                            <FaSpinner className="animate-spin mr-2" />
-                                            Annulation en cours...
-                                        </span>
-                                    ) : (
-                                        "Annuler"
-                                    )}
-                                </button>
-                            </div>
+                            )}
                         </div>
                     </div>
 
@@ -645,6 +643,6 @@ export default function ReservationsPage() {
                     )}
                 </div>
             </div>
-        </div>
+        </div >
     );
 }

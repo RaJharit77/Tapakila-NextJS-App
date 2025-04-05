@@ -24,8 +24,8 @@ interface User {
     user_name: string;
     user_email: string;
     user_first_login_date: string;
-    user_address?: string;
-    user_city?: string;
+    user_address?: string | null;
+    user_city?: string | null;
     tickets?: Ticket[];
 }
 
@@ -59,10 +59,17 @@ const ProfilePage = () => {
                 const parsedUser = JSON.parse(storedUser);
                 const userId = parsedUser.id || parsedUser.user_id;
 
-                const isFirstLogin = !parsedUser.user_first_login_date;
+                // Récupération des données complètes de l'utilisateur depuis l'API
+                const userResponse = await fetch(`/api/users/${userId}`);
+                if (!userResponse.ok) {
+                    throw new Error("Erreur lors de la récupération des données utilisateur");
+                }
+                const userData = await userResponse.json();
+
+                const isFirstLogin = !userData.user_first_login_date;
                 const loginDate = isFirstLogin
                     ? new Date().toISOString()
-                    : parsedUser.user_first_login_date;
+                    : userData.user_first_login_date;
 
                 if (isFirstLogin) {
                     localStorage.setItem("user", JSON.stringify({
@@ -104,11 +111,11 @@ const ProfilePage = () => {
                 setTicketSummary(summary);
                 setUser({
                     user_id: userId,
-                    user_name: parsedUser.user_name || parsedUser.name || "",
-                    user_email: parsedUser.user_email || parsedUser.email || "",
+                    user_name: userData.user_name || parsedUser.name || "",
+                    user_email: userData.user_email || parsedUser.email || "",
                     user_first_login_date: loginDate,
-                    user_address: parsedUser.user_address,
-                    user_city: parsedUser.user_city,
+                    user_address: userData.user_address || null,
+                    user_city: userData.user_city || null,
                     tickets
                 });
             } catch (error) {
