@@ -1,6 +1,5 @@
 import { prisma } from "@/lib/prisma";
 import { Status, Type, Ticket, Prisma } from "@prisma/client";
-import { randomUUID } from "crypto";
 import { NextResponse } from "next/server";
 
 export async function GET(request: Request) {
@@ -147,28 +146,64 @@ export async function DELETE(request: Request) {
   }
 }
 
-// ----------------------------------------------------------------------------
-
 export async function POST(request: Request) {
   try {
     const { ticketNumber, idEvent, ticket_type, ticketPrice } = await request.json();
+    console.log(ticketNumber);
+    console.log(idEvent);
+    console.log(ticket_type);
+    console.log(ticketPrice);
 
+
+ 
     if (!ticketNumber || !idEvent || !ticket_type || ticketPrice === undefined) {
-      return new NextResponse(JSON.stringify({ error: "Champs requis manquants" }), { 
+      return new NextResponse(JSON.stringify({ error: "Missing required fields" }), { 
         status: 400 
       });
     }
-     const ticketsToCreate = [];
-    for (let i = 1; i <= ticketNumber; i++) {
-      ticketsToCreate.push({
-        ticket_id: `${idEvent}TKT${randomUUID().split("-")}`,
-        ticket_status: "AVAILABLE" as Status,
-        event_id: idEvent,
-        ticket_type,
-        ticket_price: ticketPrice,
-        ticket_creation_date: new Date(),
+
+    if (typeof idEvent !== 'string') {
+      return new NextResponse(JSON.stringify({ error: "Invalid event ID format" }), { 
+        status: 400 
       });
     }
+
+  
+    let lastId = 0;
+    try {
+      const lastTicket = await prisma.ticket.findFirst({
+        where: {
+          event_id: idEvent,
+          ticket_id: { startsWith: idEvent + "TKT" }
+        },
+        orderBy: { ticket_creation_date: 'desc' }, 
+        select: { ticket_id: true }
+      });
+
+      if (lastTicket) {
+        console.log("Found last ticket:", lastTicket.ticket_id); // Added log
+        const match = lastTicket.ticket_id.match(new RegExp(`${idEvent}TKT(\\d+)`));
+        lastId = match ? parseInt(match[1]) : 0;
+        console.log("Calculated lastId:", lastId); // Added log
+      } else {
+        console.log("No previous tickets found for this event."); // Added log for clarity
+      }
+    } catch (queryError) {
+      console.error("Query error:", queryError);
+ 
+    }
+
+ 
+    const ticketsToCreate = Array.from({ length: ticketNumber }, (_, i) => ({
+      ticket_id: `${idEvent}TKT${lastId + i + 1}`,
+      ticket_status: "AVAILABLE" as const,
+      event_id: idEvent,
+      ticket_type,
+      ticket_price: ticketPrice,
+    }));
+
+    console.log(ticketsToCreate);
+
 
     const result = await prisma.ticket.createMany({
       data: ticketsToCreate,
@@ -182,9 +217,9 @@ export async function POST(request: Request) {
     });
 
   } catch (e) {
-    console.error("Erreur lors de la création des tickets:", e);
+    console.error("Ticket creation failed:", e);
     return new NextResponse(JSON.stringify({ 
-      error: "Repository error",
+      error: e instanceof Error ? e.message : "Internal server error",
     }), { 
       status: 500 
     });

@@ -1,6 +1,5 @@
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
-import { exitCode } from "process";
 
 export async function GET(request: Request, { params }: { params: { eventId: string } }) {
     const { eventId } = await params;
@@ -49,8 +48,6 @@ export async function PUT(request: Request, { params }: { params: { eventId: str
         const { eventId } = await params
         const body = await request.json()
 
-        console.log(body);
-        
         const event = await prisma.event.findUnique({
             where: {
                 event_id: eventId
@@ -89,51 +86,36 @@ export async function PUT(request: Request, { params }: { params: { eventId: str
     }
 }
 
-export async function DELETE(
-    request: Request,
-    { params }: { params: { eventId: string } }
-  ) {
-
-    const { eventId } = await params;
-    
-    if (!eventId) {
-      return new NextResponse(
-        JSON.stringify({ error: "Event ID is required" }), 
-        { status: 400, headers: { 'Content-Type': 'application/json' } }
-      );
-    }
-  
+export async function DELETE(params: string) {
     try {
-      const foundEvent = await prisma.event.findUnique({
-        where: { event_id: eventId }
-      });
-  
-      if (!foundEvent) {
-        return new NextResponse(
-          JSON.stringify({ error: "Event not found" }), 
-          { status: 404, headers: { 'Content-Type': 'application/json' } }
-        );
-      }
-       await prisma.ticket.deleteMany({
-        where: {
-            event_id: eventId
+        const event = await prisma.event.delete({
+            where: {
+                event_id: params
+            }
+        })
+
+        const verify = await prisma.event.findUnique({
+            where: {
+                event_id: params
+            }
+        })
+
+        if (verify == null) {
+            return NextResponse.json(
+                { error: "that event doesn't exist" },
+                { status: 500 }
+            )
+        } else {
+            return new NextResponse(JSON.stringify(event), { status: 200, headers: { 'Content-Type': 'application/json' } })
         }
-      })
 
-
-      const deletedEvent = await prisma.event.delete({
-        where: { event_id: eventId },
-      });
-  
-      return new NextResponse(JSON.stringify(deletedEvent), { status: 200 });
-    } catch (error) {
-      console.error("Error while deleting the event", error);
-      return new NextResponse(
-        JSON.stringify({ error: "Repository error" }),
-        { status: 500 }
-      );
-    } finally {
-      await prisma.$disconnect();
     }
-  }
+    catch (error) {
+        console.error("error fetching datas", error)
+        return new NextResponse(JSON.stringify({ error: "Repository Error" }), { status: 500 })
 
+    }
+    finally {
+        prisma.$disconnect()
+    }
+}

@@ -14,17 +14,10 @@ export async function getData() {
     return data;
 }
 
-const checkTickets = async (eventId: string, eventName: string) => {
-   
-    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
-    const apiUrl = `${baseUrl}/api/tickets/update`;
-  
-    await fetch(apiUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ eventId, eventName }), 
+const checkTickets = async (eventId: string) => {
+ 
+    await fetch(`/api/tickets/update?eventId=${eventId}`, {
+      method: 'POST'
     });
   };
 
@@ -39,6 +32,10 @@ export async function BookATicket({ data }: { data: { userId: string, ticketNumb
                 message: "User ID and Event ID are required"
             };
         }
+
+        const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+        const url = new URL(`${baseUrl}/api/tickets/update`);
+        url.searchParams.append('eventId', eventId);
 
         if (requestType === "BOOK") {
             const event = await prisma.event.findUnique({
@@ -76,22 +73,27 @@ export async function BookATicket({ data }: { data: { userId: string, ticketNumb
                 };
             }
 
-            const updatedTickets = await prisma.ticket.updateMany({
-                where: {
-                    ticket_id: { in: foundTickets.map(t => t.ticket_id) }
+            const response = await fetch(url.toString(), {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
                 },
-                data: {
-                    ticket_status: 'SOLD',
-                    user_id: userId
-                }
+                body: JSON.stringify({
+                    userId,
+                    ticketNumber,
+                    ticketType,
+                    requestType,
+                    eventId
+                })
             });
-            await checkTickets(eventId, event.event_name);
-            return {
-                status: 200,
-                success: true,
-                count: updatedTickets.count,
-                message: "Reservation successful"
-            };
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const result = await response.json();
+            await checkTickets(eventId);
+            return result;
         } else {
             const foundTickets = await prisma.ticket.findMany({
                 take: ticketNumber,
@@ -118,6 +120,8 @@ export async function BookATicket({ data }: { data: { userId: string, ticketNumb
                     user_id: null
                 }
             });
+
+           
 
             return {
                 status: 200,

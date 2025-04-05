@@ -11,11 +11,10 @@ const pusher = new Pusher({
 });
 
 export async function POST(
-  req: Request
+  req: Request,
+  { params }: { params: { eventId: string } }
 ) {
-  const { eventId, eventName } = await req.json();
-
-  console.log("Checking tickets for event:", eventId);
+  const eventId = params.eventId;
 
   // 1. Vérification des tickets
   const availableTickets = await prisma.ticket.count({
@@ -24,7 +23,7 @@ export async function POST(
       ticket_status: "AVAILABLE"
     }
   });
-  console.log("Available tickets:", availableTickets);
+
 
   if (availableTickets === 0) {
     await pusher.trigger(
@@ -32,7 +31,6 @@ export async function POST(
         'event-sold-out', 
         {
           eventId: eventId, 
-          eventName: eventName,
           message: `L'événement ${eventId} est complet !`
         }
     );

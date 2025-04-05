@@ -6,8 +6,6 @@ import { FaFacebook, FaInstagram, FaLinkedinIn, FaWhatsapp } from 'react-icons/f
 import { MdEmail } from 'react-icons/md';
 
 const Footer: React.FC = () => {
-    const isUserLoggedIn = typeof window !== 'undefined' ? localStorage.getItem('user') : null;
-
     return (
         <footer className="bg-bleuNuit text-blancCasse py-6">
             <div className="container mx-auto flex flex-col lg:flex-row justify-between items-center px-4">
@@ -128,10 +126,10 @@ const Footer: React.FC = () => {
                         Prendre contact
                     </Link>
                     <Link
-                        href={isUserLoggedIn ? "/dashboard/profile" : "/login"}
+                        href="/login"
                         className="text-blancCasse hover:text-orMetallique transition-all duration-300 hover:underline hover:scale-105"
                     >
-                        {isUserLoggedIn ? "Mon profil" : "Se connecter"}
+                        Se connecter
                     </Link>
                 </div>
             </div>

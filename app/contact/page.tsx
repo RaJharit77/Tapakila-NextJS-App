@@ -11,7 +11,7 @@ export default function ContactPage() {
         subject: "",
         message: "",
     });
-
+    const [status, setStatus] = useState<{ message: string; type: "success" | "error" } | null>(null);
     const router = useRouter();
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -22,29 +22,25 @@ export default function ContactPage() {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
+        const storedUser = localStorage.getItem("user");
+
+        if (!storedUser) {
+            toast.error("Vous devez être connecté pour envoyer un message.");
+            router.push("/login");
+            return;
+        }
+
+        const user = JSON.parse(storedUser);
+        const user_id = user.user_id;
+
         try {
-            const storedUser = localStorage.getItem("user");
-
-            if (!storedUser) {
-                toast.error("Vous devez être connecté pour envoyer un message.");
-                router.push("/login");
-                return;
-            }
-
-            const user = JSON.parse(storedUser);
-
-            if (!user.user_id) {
-                toast.error("Les informations utilisateur sont incomplètes.");
-                return;
-            }
-
             const response = await fetch("/api/contact", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
                 },
                 body: JSON.stringify({
-                    user_id: user.user_id,
+                    user_id: user_id,
                     subject: formData.subject,
                     message: formData.message,
                 }),
@@ -53,25 +49,31 @@ export default function ContactPage() {
             const result = await response.json();
 
             if (response.ok) {
-                toast.success("Message envoyé avec succès !");
+                setStatus({ message: "Message envoyé avec succès !", type: "success" });
                 setFormData({
                     subject: "",
                     message: "",
                 });
             } else {
-                toast.error(result.error || "Échec de l'envoi du message.");
+                setStatus({ message: result.error || "Erreur lors de l'envoi.", type: "error" });
             }
-        } catch (error) {
-            console.error("Error:", error);
-            toast.error("Une erreur est survenue. Veuillez réessayer.");
+        } catch {
+            setStatus({ message: "Erreur serveur. Réessayez plus tard.", type: "error" });
         }
     };
 
     return (
-        <div className="min-h-screen bg-cover bg-center flex items-center justify-center" style={{ backgroundImage: "url('/img/bgContact.jpg')" }}>
+        <div
+            className="min-h-screen bg-cover bg-center flex items-center justify-center"
+            style={{
+                backgroundImage: "url('/img/bgContact.jpg')",
+            }}
+        >
             <div className="flex flex-col lg:flex-row items-center justify-center gap-8 w-full max-w-6xl p-4 py-32">
                 <div className="bg-gray-900 bg-opacity-70 rounded-xl shadow-lg w-full lg:w-1/2 p-6 lg:p-10">
-                    <h1 className="text-3xl font-extrabold text-center text-blancCasse mb-8">Contactez-nous</h1>
+                    <h1 className="text-3xl font-extrabold text-center text-blancCasse mb-8">
+                        Contactez-nous
+                    </h1>
                     <form onSubmit={handleSubmit} className="space-y-6 text-blancCasse">
                         <input
                             type="text"
@@ -79,7 +81,6 @@ export default function ContactPage() {
                             value={formData.subject}
                             onChange={handleChange}
                             placeholder="Sujet"
-                            required
                             className="w-full bg-bleuNuit p-4 border border-gray-700 rounded-md shadow-sm focus:ring-2 focus:ring-gray-700 focus:outline-none"
                         />
                         <textarea
@@ -87,7 +88,6 @@ export default function ContactPage() {
                             value={formData.message}
                             onChange={handleChange}
                             placeholder="Votre message"
-                            required
                             className="w-full bg-bleuNuit p-4 border border-gray-700 rounded-md shadow-sm focus:ring-2 focus:ring-gray-700 focus:outline-none h-40"
                         ></textarea>
                         <button
@@ -97,6 +97,14 @@ export default function ContactPage() {
                             Envoyer
                         </button>
                     </form>
+                    {status && (
+                        <p
+                            className={`text-center mt-4 ${status.type === "success" ? "text-green-500" : "text-red-500"
+                                }`}
+                        >
+                            {status.message}
+                        </p>
+                    )}
                 </div>
                 <div className="bg-gray-900 bg-opacity-70 rounded-xl shadow-lg w-full lg:w-1/2 p-6 lg:p-10">
                     <h2 className="text-2xl font-bold text-center text-blancCasse mb-6">

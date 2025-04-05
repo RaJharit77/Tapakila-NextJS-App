@@ -244,7 +244,7 @@ export default function Navbar() {
                             <select
                                 value={searchType}
                                 onChange={(e) => setSearchType(e.target.value as "name" | "location" | "date" | "category")}
-                                className="bg-blancGlacialNeutre text-bleuNuit rounded-lg px-2 py-1 text-sm focus:outline-none"
+                                className="bg-bleuNuit text-blancGlacialNeutre rounded-lg px-2 py-1 text-sm focus:outline-none"
                             >
                                 <option value="name">Nom</option>
                                 <option value="location">Lieu</option>
