@@ -1,10 +1,6 @@
-// components/EventNotifications.tsx
 'use client';
 import { useEffect } from 'react';
 import Pusher from 'pusher-js';
-import { toast } from 'sonner';
-
-
 
 export default function EventNotifications() {
   useEffect(() => {
@@ -12,7 +8,7 @@ export default function EventNotifications() {
       cluster: 'eu'
     });
 
-    const channel = pusher.subscribe('global-notifications'); // Même canal pour tous
+    const channel = pusher.subscribe('global-notifications');
     
     channel.bind('event-sold-out', (data: { eventId: string, message: string }) => {
       alert(`Nouvelle alerte : ${data.message}`);
