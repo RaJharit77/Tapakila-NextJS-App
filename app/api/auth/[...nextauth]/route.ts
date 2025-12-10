@@ -1,4 +1,8 @@
-import NextAuth from "next-auth";
+import { handlers } from "@/lib/auth";
+
+export const { GET, POST } = handlers;
+
+/*import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import { compare } from "bcryptjs";
 import { prisma } from "@/lib/prisma";
@@ -93,4 +97,4 @@ const {
   },
 });
 
-export { nextAuthGET as GET, nextAuthPOST as POST, auth };
+export { nextAuthGET as GET, nextAuthPOST as POST, auth };*/

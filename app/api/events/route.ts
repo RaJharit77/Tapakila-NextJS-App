@@ -2,7 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 import type { EventStatus } from "@prisma/client";
 
-interface EventWhereClause {
+/*interface EventWhereClause {
     event_status?: EventStatus;
     event_name?: { contains: string; mode: "insensitive" };
     event_place?: { contains: string; mode: "insensitive" };
@@ -21,7 +21,7 @@ interface EventPostData {
     event_organizer?: string;
     event_image?: string;
     admin_id: string;
-}
+}*/
 
 export async function GET(request: Request) {
     try {
@@ -86,11 +86,10 @@ export async function GET(request: Request) {
 
 
 
-
 export async function POST(request: Request) {
     try {
         const body = await request.json()
-        const { event_name, event_place, event_category, event_date, event_description, event_organizer, event_image, admin_id } = body
+        const { event_name, event_place, event_category, event_date, admin_id } = body
         const admin = await prisma.admin.findUnique({
             where:{
                 admin_id : admin_id

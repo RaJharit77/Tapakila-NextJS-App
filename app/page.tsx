@@ -182,7 +182,7 @@ export default function Home() {
         <div className="absolute inset-0 bg-black bg-opacity-50"></div>
         <div className="relative z-10 container mx-auto px-3">
           <h2 className="text-3xl font-bold text-blancGlacialNeutre mb-12 text-center">
-            Événements à l'affiche
+            Événements à l&apos;affiche
           </h2>
 
           {upcomingEvents.length > 0 ? (
@@ -228,7 +228,7 @@ export default function Home() {
             </div>
           ) : (
             <p className="text-blancGlacialNeutre text-xl text-center py-12">
-              Aucun événement à l'affiche pour le moment.
+              Aucun événement à l&apos;affiche pour le moment.
             </p>
           )}
         </div>

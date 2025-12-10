@@ -22,6 +22,29 @@ interface Ticket {
     event_place?: string;
 }
 
+interface ReservationDetails {
+    type: string;
+    count: number;
+    price: number;
+    total: number;
+}
+
+interface EventDetails {
+    name: string;
+    image: string;
+    date: string;
+    place: string;
+}
+
+interface ApiTicket {
+    ticket_id: string;
+    ticket_type: string;
+    ticket_price: number;
+    ticket_status: string;
+    user_id?: string;
+    event_id?: string;
+}
+
 export default function ReservationsPage() {
     const { data: session, status } = useSession();
     const router = useRouter();
@@ -32,8 +55,8 @@ export default function ReservationsPage() {
     const [ticketCount, setTicketCount] = useState<number>(1);
     const [isBooking, setIsBooking] = useState(false);
     const [step, setStep] = useState<"selection" | "confirmation" | "completed">("selection");
-    const [reservationDetails, setReservationDetails] = useState<any>(null);
-    const [eventDetails, setEventDetails] = useState<any>(null);
+    const [reservationDetails, setReservationDetails] = useState<ReservationDetails | null>(null);
+    const [eventDetails, setEventDetails] = useState<EventDetails | null>(null);
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [isEventPast, setIsEventPast] = useState(false);
 
@@ -94,7 +117,7 @@ export default function ReservationsPage() {
                 if (!ticketsResponse.ok) throw new Error("Failed to fetch tickets");
 
                 const ticketsData = await ticketsResponse.json();
-                const formattedTickets = ticketsData.tickets?.map((ticket: any) => ({
+                const formattedTickets = ticketsData.tickets?.map((ticket: ApiTicket) => ({
                     id: ticket.ticket_id,
                     type: ticket.ticket_type,
                     price: ticket.ticket_price,
@@ -404,7 +427,7 @@ export default function ReservationsPage() {
 
                         {eventDetails && (
                             <div className="mb-8 text-left">
-                                <h2 className="text-xl font-semibold text-blancCasse mb-4">Détails de l'événement</h2>
+                                <h2 className="text-xl font-semibold text-blancCasse mb-4">Détails de l&apos;événement</h2>
                                 <div className="flex flex-col md:flex-row gap-6">
                                     <div className="w-full md:w-1/3 h-48 relative rounded-lg overflow-hidden">
                                         <Image

@@ -59,7 +59,7 @@ export default function EventsPage() {
 
     if (params.toString()) url += `?${params.toString()}`;
 
-    const { data: events, error, isLoading, mutate } = useSWR<Event[]>(url, fetcher, {
+    const { data: events, error, isLoading } = useSWR<Event[]>(url, fetcher, {
         refreshInterval: 5000, 
         revalidateOnFocus: true, 
         revalidateOnReconnect: true, 

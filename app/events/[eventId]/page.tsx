@@ -40,7 +40,7 @@ export default function EventPage() {
     const router = useRouter();
     const { event, setEvent, setLoading, setError, clearEvent } = useEventDetailStore();
 
-    const { data, error, isLoading } = useSWR<Event>(
+    const { error, isLoading } = useSWR<Event>(
         eventId ? `/api/events/${eventId}` : null,
         fetcher,
         {
@@ -80,7 +80,7 @@ export default function EventPage() {
         return () => {
             clearEvent();
         };
-    }, []);
+    }, [clearEvent]);
 
     const handleReservationClick = () => {
         if (!isLoggedIn) {

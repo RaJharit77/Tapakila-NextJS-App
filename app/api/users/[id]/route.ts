@@ -4,7 +4,7 @@ import { NextResponse } from "next/server";
 export async function GET(request: Request, { params }: { params: { id: string } }) {
     try {
         const { id } = params;
-        
+
         if (!id || typeof id !== 'string') {
             return new NextResponse(
                 JSON.stringify({ error: "Invalid user ID" }),
@@ -27,14 +27,14 @@ export async function GET(request: Request, { params }: { params: { id: string }
             );
         }
 
-        return new NextResponse(JSON.stringify(user), { 
-            status: 200, 
-            headers: { 'Content-Type': 'application/json' } 
+        return new NextResponse(JSON.stringify(user), {
+            status: 200,
+            headers: { 'Content-Type': 'application/json' }
         });
     } catch (error) {
         console.error("Error finding the user:", error);
         return new NextResponse(
-            JSON.stringify({ 
+            JSON.stringify({
                 error: "Internal server error",
                 details: error instanceof Error ? error.message : String(error)
             }),
@@ -69,7 +69,11 @@ export async function PUT(request: Request, { params }: { params: { id: string }
         }
 
         const { user_name, user_address, user_city } = body;
-        const updateData: Record<string, any> = {};
+        const updateData: {
+            user_name?: string;
+            user_address?: string | null;
+            user_city?: string | null;
+        } = {};
 
         if (user_name) updateData.user_name = user_name;
         if (user_address !== undefined) updateData.user_address = user_address;
@@ -87,7 +91,7 @@ export async function PUT(request: Request, { params }: { params: { id: string }
             data: updateData
         });
 
-        return new NextResponse(JSON.stringify(updatedUser), { 
+        return new NextResponse(JSON.stringify(updatedUser), {
             status: 200,
             headers: { 'Content-Type': 'application/json' }
         });
@@ -95,7 +99,7 @@ export async function PUT(request: Request, { params }: { params: { id: string }
     } catch (error) {
         console.error("Error updating user:", error);
         return new NextResponse(
-            JSON.stringify({ 
+            JSON.stringify({
                 error: "Internal server error",
                 details: error instanceof Error ? error.message : String(error)
             }),

@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { FaTicketAlt } from "react-icons/fa";
@@ -59,7 +60,6 @@ const ProfilePage = () => {
                 const parsedUser = JSON.parse(storedUser);
                 const userId = parsedUser.id || parsedUser.user_id;
 
-                // Récupération des données complètes de l'utilisateur depuis l'API
                 const userResponse = await fetch(`/api/users/${userId}`);
                 if (!userResponse.ok) {
                     throw new Error("Erreur lors de la récupération des données utilisateur");
@@ -189,7 +189,7 @@ const ProfilePage = () => {
                     </div>
                     <div className="space-y-4">
                         <div>
-                            <label className="block text-sm font-medium text-orMetallique">Date d'adhésion</label>
+                            <label className="block text-sm font-medium text-orMetallique">Date d&apos;adhésion</label>
                             <p className="mt-1 text-lg text-blancCasse">
                                 {new Date(user.user_first_login_date).toLocaleDateString('fr-FR', {
                                     day: 'numeric',
@@ -201,7 +201,7 @@ const ProfilePage = () => {
                         <div>
                             <label className="block text-sm font-medium text-orMetallique">Total de billets</label>
                             <p className="mt-1 text-lg text-blancCasse">
-                                {user.tickets?.length || 0} billet(s)
+                                {user.tickets?.length || 0} billet{user.tickets?.length !== 1 ? 's' : ''}
                             </p>
                         </div>
                     </div>
@@ -219,7 +219,7 @@ const ProfilePage = () => {
                                 <div key={key} className="bg-gray-800 bg-opacity-50 rounded-lg p-4">
                                     <div className="flex flex-col md:flex-row gap-4">
                                         <div className="w-full md:w-1/4 h-40 relative rounded-lg overflow-hidden">
-                                            <img
+                                            <Image
                                                 src={summary.event.image}
                                                 alt={summary.event.name}
                                                 className="w-full h-full object-cover"
@@ -271,7 +271,7 @@ const ProfilePage = () => {
                         </div>
                     ) : (
                         <div className="text-center py-8">
-                            <p className="text-blancCasse text-lg">Vous n'avez pas encore acheté de billets.</p>
+                            <p className="text-blancCasse text-lg">Vous n&apos;avez pas encore acheté de billets.</p>
                             <button
                                 onClick={() => router.push("/events")}
                                 className="mt-4 px-6 py-2 bg-bleuElec text-blancCasse rounded-lg hover:bg-bleuNuit hover:text-orMetallique transition duration-300"
@@ -293,7 +293,7 @@ const ProfilePage = () => {
                         onClick={() => router.push("/")}
                         className="px-6 py-3 bg-bleuElec text-blancCasse rounded-lg hover:bg-bleuNuit hover:text-orMetallique transition duration-300"
                     >
-                        Retour à l'accueil
+                        Retour à l&apos;accueil
                     </button>
                 </div>
             </div>

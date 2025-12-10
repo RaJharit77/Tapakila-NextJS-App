@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import { Status, Type, Ticket, Prisma } from "@prisma/client";
+import { Status, Type } from "@prisma/client";
 import { NextResponse } from "next/server";
 
 export async function GET(request: Request) {
@@ -10,7 +10,7 @@ export async function GET(request: Request) {
     const idEvent = url.searchParams.get('idEvent');
 
     const ticketsNumber = await prisma.ticket.count({
-      where:{
+      where: {
         ticket_status: "SOLD" as Status
       }
     });
@@ -32,7 +32,7 @@ export async function GET(request: Request) {
       total: ticketStats.reduce((sum, stat) => sum + stat._count.ticket_type, 0)
     };
 
-    if(status || type || idEvent){
+    if (status || type || idEvent) {
       const tickets = await prisma.ticket.findMany({
         where: {
           ...(status && { ticket_status: status as Status }),
@@ -82,13 +82,17 @@ export async function DELETE(request: Request) {
     }
 
 
-    const whereClause: any = {
+    const whereClause: {
+      event_id: string;
+      ticket_status: "AVAILABLE";
+      ticket_type?: Type;
+    } = {
       event_id: eventId,
       ticket_status: "AVAILABLE"
     };
 
     if (ticketType) {
-      whereClause.ticket_type = ticketType;
+      whereClause.ticket_type = ticketType as Type;
     }
 
 
@@ -106,7 +110,7 @@ export async function DELETE(request: Request) {
             ticketType: ticketType || "Tous types"
           }
         }),
-        { status: 409 } 
+        { status: 409 }
       );
     }
 
@@ -117,7 +121,7 @@ export async function DELETE(request: Request) {
 
     });
 
-  
+
     const deleteResult = await prisma.ticket.deleteMany({
       where: {
         ticket_id: { in: foundTickets.map(t => t.ticket_id) }
@@ -135,7 +139,7 @@ export async function DELETE(request: Request) {
   } catch (e) {
     console.error("Erreur :", e);
     return new NextResponse(
-      JSON.stringify({ 
+      JSON.stringify({
         error: "Erreur lors de la suppression",
         details: e instanceof Error ? e.message : "Erreur inconnue"
       }),
@@ -155,20 +159,19 @@ export async function POST(request: Request) {
     console.log(ticketPrice);
 
 
- 
     if (!ticketNumber || !idEvent || !ticket_type || ticketPrice === undefined) {
-      return new NextResponse(JSON.stringify({ error: "Missing required fields" }), { 
-        status: 400 
+      return new NextResponse(JSON.stringify({ error: "Missing required fields" }), {
+        status: 400
       });
     }
 
     if (typeof idEvent !== 'string') {
-      return new NextResponse(JSON.stringify({ error: "Invalid event ID format" }), { 
-        status: 400 
+      return new NextResponse(JSON.stringify({ error: "Invalid event ID format" }), {
+        status: 400
       });
     }
 
-  
+
     let lastId = 0;
     try {
       const lastTicket = await prisma.ticket.findFirst({
@@ -176,7 +179,7 @@ export async function POST(request: Request) {
           event_id: idEvent,
           ticket_id: { startsWith: idEvent + "TKT" }
         },
-        orderBy: { ticket_creation_date: 'desc' }, 
+        orderBy: { ticket_creation_date: 'desc' },
         select: { ticket_id: true }
       });
 
@@ -190,10 +193,10 @@ export async function POST(request: Request) {
       }
     } catch (queryError) {
       console.error("Query error:", queryError);
- 
+
     }
 
- 
+
     const ticketsToCreate = Array.from({ length: ticketNumber }, (_, i) => ({
       ticket_id: `${idEvent}TKT${lastId + i + 1}`,
       ticket_status: "AVAILABLE" as const,
@@ -210,18 +213,18 @@ export async function POST(request: Request) {
       skipDuplicates: true,
     });
 
-    return new NextResponse(JSON.stringify({ 
-      created: result.count 
-    }), { 
-      status: 201 
+    return new NextResponse(JSON.stringify({
+      created: result.count
+    }), {
+      status: 201
     });
 
   } catch (e) {
     console.error("Ticket creation failed:", e);
-    return new NextResponse(JSON.stringify({ 
+    return new NextResponse(JSON.stringify({
       error: e instanceof Error ? e.message : "Internal server error",
-    }), { 
-      status: 500 
+    }), {
+      status: 500
     });
   } finally {
     await prisma.$disconnect();

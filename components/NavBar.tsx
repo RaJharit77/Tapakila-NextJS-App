@@ -43,7 +43,8 @@ export default function Navbar() {
                 const response = await fetch('/api/events');
                 if (response.ok) {
                     const events = await response.json();
-                    const uniqueCategories = [...new Set(events.map((event: any) => event.event_category || 'Autres'))] as string[];
+                    const uniqueCategories = [...new Set(events.map((event: { event_category?: string }) => event.event_category || 'Autres'))] as string[];
+                    /*const uniqueCategories = [...new Set(events.map((event: any) => event.event_category || 'Autres'))] as string[];*/
                     setCategories(uniqueCategories.filter(Boolean));
                 }
             } catch (error) {
