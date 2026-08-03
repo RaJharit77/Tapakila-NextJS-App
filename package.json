@@ -28,7 +28,7 @@
     "bcrypt": "^6.0.0",
     "bcryptjs": "^3.0.2",
     "jsonwebtoken": "^9.0.2",
-    "next": "^16.1.5",
+    "next": "^16.2.12",
     "next-auth": "^5.0.0-beta.25",
     "pusher": "^5.2.0",
     "pusher-js": "^8.4.0",
