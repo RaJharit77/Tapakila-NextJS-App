@@ -1,5 +1,6 @@
 "use client";
 
+import { Suspense } from "react";
 import EventCard from "@/components/EventCard";
 import { useSearchParams } from "next/navigation";
 import Image from "next/image";
@@ -42,7 +43,7 @@ const fetcher = async (url: string) => {
     }));
 };
 
-export default function EventsPage() {
+function EventsContent() {
     const searchParams = useSearchParams();
     const nameQuery = searchParams.get("name") || "";
     const locationQuery = searchParams.get("location") || "";
@@ -60,9 +61,9 @@ export default function EventsPage() {
     if (params.toString()) url += `?${params.toString()}`;
 
     const { data: events, error, isLoading } = useSWR<Event[]>(url, fetcher, {
-        refreshInterval: 5000, 
-        revalidateOnFocus: true, 
-        revalidateOnReconnect: true, 
+        refreshInterval: 5000,
+        revalidateOnFocus: true,
+        revalidateOnReconnect: true,
         dedupingInterval: 2000,
     });
 
@@ -135,5 +136,25 @@ export default function EventsPage() {
                 )}
             </div>
         </div>
+    );
+}
+
+export default function EventsPage() {
+    return (
+        <Suspense
+            fallback={
+                <div className="min-h-screen flex items-center justify-center">
+                    <div className="text-blancGlacialNeutre text-xl flex items-center">
+                        <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-blancGlacialNeutre" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Chargement...
+                    </div>
+                </div>
+            }
+        >
+            <EventsContent />
+        </Suspense>
     );
 }

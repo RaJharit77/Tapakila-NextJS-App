@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { Suspense, useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { BookATicket } from "@/app/actions";
 import TicketTable from "@/components/TicketTable";
@@ -45,7 +45,7 @@ interface ApiTicket {
     event_id?: string;
 }
 
-export default function ReservationsPage() {
+function ReservationsContent() {
     const { data: session, status } = useSession();
     const router = useRouter();
     const searchParams = useSearchParams();
@@ -72,7 +72,7 @@ export default function ReservationsPage() {
     useEffect(() => {
         console.log("Authentication status:", status);
         console.log("Session data:", session);
-    }, [status, session])
+    }, [status, session]);
 
     useEffect(() => {
         const checkAuth = () => {
@@ -666,6 +666,20 @@ export default function ReservationsPage() {
                     )}
                 </div>
             </div>
-        </div >
+        </div>
+    );
+}
+
+export default function ReservationsPage() {
+    return (
+        <Suspense
+            fallback={
+                <div className="flex justify-center items-center min-h-screen">
+                    <FaSpinner className="animate-spin text-4xl text-bleuNuit" />
+                </div>
+            }
+        >
+            <ReservationsContent />
+        </Suspense>
     );
 }

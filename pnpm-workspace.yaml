@@ -1,0 +1,8 @@
+allowBuilds:
+  '@clerk/shared': true
+  '@heroui/shared-utils': true
+  '@prisma/client': true
+  '@prisma/engines': true
+  bcrypt: true
+  cypress: true
+  prisma: true

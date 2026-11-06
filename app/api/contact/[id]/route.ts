@@ -28,10 +28,13 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     }
 }
 
-export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
+export async function PUT(
+    request: NextRequest,
+    { params }: { params: Promise<{ id: string }> }
+) {
     try {
         const body = await request.json();
-        const { id } = params;
+        const { id } = await params;
 
         const updatedUser = await prisma.user.update({
             where: { user_id: id },
@@ -56,23 +59,23 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
 
 export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
 
-    try{
-        const  {id} = await params
+    try {
+        const { id } = await params
         const foudMessage = await prisma.message.findUnique({
-            where:{
+            where: {
                 message_id: id
             }
         })
-        if(foudMessage){
+        if (foudMessage) {
             const deleted = await prisma.message.delete({
                 where: {
-                    message_id : id
+                    message_id: id
                 }
             })
 
-            return new NextResponse(JSON.stringify(deleted), {status: 200})
-        }else{
-            return new NextResponse(JSON.stringify({error : "Message not found"}), {status: 404})
+            return new NextResponse(JSON.stringify(deleted), { status: 200 })
+        } else {
+            return new NextResponse(JSON.stringify({ error: "Message not found" }), { status: 404 })
         }
 
 

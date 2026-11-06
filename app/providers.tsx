@@ -1,15 +1,15 @@
 "use client";
 
-import { NextUIProvider } from "@nextui-org/react";
+import { HeroUIProvider } from "@heroui/system";
 import { SessionProvider } from "next-auth/react";
 import { ReactNode } from "react";
 
 export default function Providers({ children }: { children: ReactNode }) {
   return (
     <SessionProvider>
-      <NextUIProvider>
+      <HeroUIProvider>
         {children}
-      </NextUIProvider>
+      </HeroUIProvider>
     </SessionProvider>
   );
 } 
