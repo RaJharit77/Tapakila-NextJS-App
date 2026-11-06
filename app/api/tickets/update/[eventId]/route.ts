@@ -12,9 +12,9 @@ const pusher = new Pusher({
 
 export async function POST(
   req: Request,
-  { params }: { params: { eventId: string } }
+  { params }: { params: Promise<{ eventId: string }> }
 ) {
-  const eventId = params.eventId;
+  const { eventId } = await params;
 
   // 1. Vérification des tickets
   const availableTickets = await prisma.ticket.count({
@@ -27,12 +27,12 @@ export async function POST(
 
   if (availableTickets === 0) {
     await pusher.trigger(
-        'global-notifications', 
-        'event-sold-out', 
-        {
-          eventId: eventId, 
-          message: `L'événement ${eventId} est complet !`
-        }
+      'global-notifications',
+      'event-sold-out',
+      {
+        eventId: eventId,
+        message: `L'événement ${eventId} est complet !`
+      }
     );
   }
 

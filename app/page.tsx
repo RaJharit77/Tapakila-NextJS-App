@@ -222,8 +222,8 @@ export default function Home() {
                   </SwiperSlide>
                 ))}
 
-                <div className="swiper-button-prev !text-orMetallique !left-0"></div>
-                <div className="swiper-button-next !text-orMetallique !right-0"></div>
+                <div className="swiper-button-prev text-orMetallique! left-0!"></div>
+                <div className="swiper-button-next text-orMetallique! right-0!"></div>
               </Swiper>
             </div>
           ) : (

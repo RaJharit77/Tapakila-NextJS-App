@@ -1,6 +1,6 @@
 "use client";
 
-import { HeroUIProvider } from "@heroui/react";
+import { HeroUIProvider } from "@heroui/system";
 import { SessionProvider } from "next-auth/react";
 import { ReactNode } from "react";
 

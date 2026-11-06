@@ -1,8 +1,6 @@
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "@/lib/prisma";
 import bcrypt from "bcrypt";
 import { NextResponse } from "next/server";
-
-const prisma = new PrismaClient();
 
 interface SignupRequest {
     name: string;
