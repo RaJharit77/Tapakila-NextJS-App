@@ -2,7 +2,7 @@
 
 import { FaTicketAlt } from "react-icons/fa";
 import { useState } from "react";
-import { Pagination } from "@nextui-org/react";
+import { Pagination } from "@heroui/react";
 
 interface Ticket {
     id: string;

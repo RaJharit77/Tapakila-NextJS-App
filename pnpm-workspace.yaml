@@ -1,0 +1,7 @@
+allowBuilds:
+  '@clerk/shared': true
+  '@prisma/client': true
+  '@prisma/engines': true
+  bcrypt: true
+  cypress: true
+  prisma: true
