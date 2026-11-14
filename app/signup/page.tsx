@@ -1,8 +1,10 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useState } from "react";
-import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
+import { AiOutlineEye, AiOutlineEyeInvisible, AiOutlineMail, AiOutlineLock, AiOutlineUser } from "react-icons/ai";
+import { FaArrowRight } from "react-icons/fa";
 
 function SignupPage() {
     const [name, setName] = useState("");
@@ -10,131 +12,187 @@ function SignupPage() {
     const [password, setPassword] = useState("");
     const [errorMessage, setErrorMessage] = useState("");
     const [showPassword, setShowPassword] = useState<boolean>(false);
+    const [isLoading, setIsLoading] = useState<boolean>(false);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        setErrorMessage("");
+        setIsLoading(true);
 
         try {
+            // 1. Inscription
             const res = await fetch("/api/auth/signup", {
                 method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
+                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ name, email, password }),
             });
 
             if (!res.ok) {
                 const data = await res.json();
                 setErrorMessage(data.message || "Erreur lors de l'inscription.");
+                setIsLoading(false);
                 return;
             }
 
             const signupData = await res.json();
-
             if (signupData.error) {
                 setErrorMessage(signupData.error);
+                setIsLoading(false);
                 return;
             }
 
-            try {
-                const loginRes = await fetch("/api/auth/login", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                    body: JSON.stringify({ email, password }),
-                });
+            // 2. Connexion automatique après inscription
+            const loginRes = await fetch("/api/auth/login", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email, password }),
+            });
 
-                if (!loginRes.ok) {
-                    const data = await loginRes.json();
-                    setErrorMessage(data.message || "Erreur lors de la connexion");
-                    return;
-                }
-
-                const loginData = await loginRes.json();
-
-                localStorage.setItem("user", JSON.stringify({
-                    id: loginData.user.id,
-                    name: loginData.user.name,
-                    email: loginData.user.email
-                }));
-
-                localStorage.setItem("user_id", loginData.user.id);
-
-                window.location.href = "/dashboard/profile";
-            } catch {
-                setErrorMessage("Erreur lors de la connexion");
+            if (!loginRes.ok) {
+                const data = await loginRes.json();
+                setErrorMessage(data.message || "Compte créé, mais erreur de connexion automatique.");
+                setIsLoading(false);
+                return;
             }
+
+            const loginData = await loginRes.json();
+
+            localStorage.setItem("user", JSON.stringify({
+                id: loginData.user.id,
+                name: loginData.user.name,
+                email: loginData.user.email
+            }));
+            localStorage.setItem("user_id", loginData.user.id);
+
+            window.location.href = "/dashboard/profile";
+
         } catch {
             setErrorMessage("Erreur lors de l'inscription. Veuillez réessayer.");
+            setIsLoading(false);
         }
     };
 
     return (
-        <div
-            className="relative bg-cover bg-center min-h-screen flex items-center justify-center"
-            style={{ backgroundImage: "url('/img/bgSignup.jpg')" }}
-        >
-            <div className="absolute inset-0 bg-black bg-opacity-70"></div>
+        <div className="relative min-h-screen flex items-center justify-center py-20 px-4 sm:px-6 lg:px-8">
+            {/* Background Image */}
+            <Image
+                src="/img/bgSignup.jpg"
+                alt="Background Inscription"
+                fill
+                className="object-cover"
+                priority
+            />
+            <div className="absolute inset-0 bg-bleuNuit/90 backdrop-blur-sm pointer-events-none" />
 
-            <form
-                onSubmit={handleSubmit}
-                className="relative bg-gray-900 bg-opacity-50 p-6 rounded-lg shadow-lg w-96 z-10 bottom-0 text-orMetallique"
-            >
-                <h2 className="text-2xl font-bold mb-4 text-center">Créer un compte</h2>
-                <div className="mb-4">
-                    <label className="block mb-2">Nom complet</label>
-                    <input
-                        type="text"
-                        placeholder="John Doe"
-                        className="w-full px-4 py-2 border-gray-800 rounded-md bg-bleuNuit"
-                        value={name}
-                        onChange={(e) => setName(e.target.value)}
-                        required
-                    />
+            {/* Formulaire Glassmorphism */}
+            <div className="relative z-10 w-full max-w-md bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-8 sm:p-10 shadow-2xl">
+
+                <div className="text-center mb-8">
+                    <Link href="/" className="inline-block mb-4">
+                        <h1 className="text-3xl font-extrabold">
+                            <span className="text-bleuElec">Tap</span>
+                            <span className="text-orMetallique">akila</span>
+                        </h1>
+                    </Link>
+                    <h2 className="text-2xl font-bold text-white mb-2">Créer un compte</h2>
+                    <p className="text-gray-400 text-sm">Rejoignez-nous pour réserver vos événements.</p>
                 </div>
-                <div className="mb-4">
-                    <label className="block mb-2">Email</label>
-                    <input
-                        type="email"
-                        placeholder="john.doe@gmail.com"
-                        className="w-full px-4 py-2 border-gray-800 rounded-md bg-bleuNuit"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        required
-                    />
-                </div>
-                <div className="mb-4 relative">
-                    <label className="block mb-2">Mot de passe</label>
-                    <input
-                        type={showPassword ? "text" : "password"}
-                        placeholder="votre mot de passe"
-                        className="w-full px-4 py-2 border-gray-800 rounded-md bg-bleuNuit pr-10"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        required
-                    />
+
+                {errorMessage && (
+                    <div className="mb-6 p-3 bg-red-500/10 border border-red-500/30 rounded-xl text-red-400 text-sm text-center">
+                        {errorMessage}
+                    </div>
+                )}
+
+                <form onSubmit={handleSubmit} className="space-y-5">
+                    {/* Nom */}
+                    <div>
+                        <label htmlFor="name" className="block text-sm font-medium text-gray-300 mb-2">
+                            Nom complet
+                        </label>
+                        <div className="relative">
+                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <AiOutlineUser className="text-gray-400" />
+                            </div>
+                            <input
+                                type="text"
+                                id="name"
+                                placeholder="John Doe"
+                                className="w-full pl-10 pr-4 py-3 bg-black/20 border border-white/10 text-white placeholder-gray-500 rounded-xl focus:outline-none focus:border-bleuElec focus:ring-1 focus:ring-bleuElec transition-all"
+                                value={name}
+                                onChange={(e) => setName(e.target.value)}
+                                required
+                            />
+                        </div>
+                    </div>
+
+                    {/* Email */}
+                    <div>
+                        <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-2">
+                            Adresse email
+                        </label>
+                        <div className="relative">
+                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <AiOutlineMail className="text-gray-400" />
+                            </div>
+                            <input
+                                type="email"
+                                id="email"
+                                placeholder="john.doe@gmail.com"
+                                className="w-full pl-10 pr-4 py-3 bg-black/20 border border-white/10 text-white placeholder-gray-500 rounded-xl focus:outline-none focus:border-bleuElec focus:ring-1 focus:ring-bleuElec transition-all"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                                required
+                            />
+                        </div>
+                    </div>
+
+                    {/* Mot de passe */}
+                    <div>
+                        <label htmlFor="password" className="block text-sm font-medium text-gray-300 mb-2">
+                            Mot de passe
+                        </label>
+                        <div className="relative">
+                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <AiOutlineLock className="text-gray-400" />
+                            </div>
+                            <input
+                                type={showPassword ? "text" : "password"}
+                                id="password"
+                                placeholder="••••••••"
+                                className="w-full pl-10 pr-12 py-3 bg-black/20 border border-white/10 text-white placeholder-gray-500 rounded-xl focus:outline-none focus:border-bleuElec focus:ring-1 focus:ring-bleuElec transition-all"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                required
+                            />
+                            <button
+                                type="button"
+                                className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-white transition-colors"
+                                onClick={() => setShowPassword(!showPassword)}
+                            >
+                                {showPassword ? <AiOutlineEyeInvisible size={20} /> : <AiOutlineEye size={20} />}
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* CORRECTION : Ajout de type="submit" */}
                     <button
-                        type="button"
-                        className="absolute top-3/4 right-3 transform -translate-y-1/2 text-gray-300 hover:text-gray-100"
-                        onClick={() => setShowPassword(!showPassword)}
+                        type="submit"
+                        disabled={isLoading}
+                        className="w-full mt-2 py-3.5 bg-bleuElec text-white font-bold rounded-xl flex items-center justify-center gap-2 hover:bg-orMetallique hover:text-bleuNuit transition-all duration-300 shadow-[0_0_15px_rgba(0,119,255,0.4)] hover:shadow-[0_0_25px_rgba(255,186,8,0.6)] transform hover:-translate-y-1 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
                     >
-                        {showPassword ? <AiOutlineEye /> : <AiOutlineEyeInvisible />}
+                        {isLoading ? "Inscription en cours..." : "S'inscrire"}
+                        {!isLoading && <FaArrowRight size={14} />}
                     </button>
-                </div>
-                {errorMessage && <div className="text-red-500 mb-4">{errorMessage}</div>}
-                <button
-                    className="w-full bg-bleuElec hover:bg-bleuNuit text-blancCasse hover:text-orMetallique px-4 py-2 rounded-lg"
-                >
-                    S&apos;inscrire
-                </button>
-                <p className="mt-4 text-center">
+                </form>
+
+                <div className="mt-8 text-center text-sm text-gray-400">
                     Déjà un compte ?{" "}
-                    <Link href="/login" className="text-grisArgent hover:underline">
+                    <Link href="/login" className="text-orMetallique font-semibold hover:text-white transition-colors">
                         Connectez-vous
                     </Link>
-                </p>
-            </form>
+                </div>
+            </div>
         </div>
     );
 }

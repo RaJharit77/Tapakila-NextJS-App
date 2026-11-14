@@ -5,6 +5,7 @@ import EventCard from "@/components/EventCard";
 import { useSearchParams } from "next/navigation";
 import Image from "next/image";
 import useSWR from "swr";
+import Spinner from "@/components/Spinner";
 
 interface Event {
     id: string;
@@ -63,8 +64,6 @@ function EventsContent() {
     const { data: events, error, isLoading } = useSWR<Event[]>(url, fetcher, {
         refreshInterval: 5000,
         revalidateOnFocus: true,
-        revalidateOnReconnect: true,
-        dedupingInterval: 2000,
     });
 
     const eventsByCategory = events?.reduce((acc: Record<string, Event[]>, event) => {
@@ -76,45 +75,48 @@ function EventsContent() {
     }, {}) || {};
 
     return (
-        <div className="min-h-screen py-16 px-4 sm:px-6 lg:px-8 relative">
+        <div className="min-h-screen py-32 px-4 sm:px-6 lg:px-8 relative">
             <Image
                 src="/img/bgEvent.jpg"
                 alt="Background événements"
                 fill
                 className="object-cover"
-                quality={80}
                 priority
             />
-            <div className="absolute inset-0 bg-black bg-opacity-60 pointer-events-none" />
+            <div className="absolute inset-0 bg-bleuNuit/90 backdrop-blur-sm pointer-events-none" />
 
-            <div className="p-16 relative z-10">
-                <h1 className="text-4xl font-bold text-bleuNuit text-center mb-8">
-                    Événements
-                </h1>
+            <div className="relative z-10 max-w-7xl mx-auto">
+                <div className="text-center mb-16">
+                    <h1 className="text-4xl sm:text-5xl font-extrabold text-white mb-4">
+                        Tous les <span className="text-bleuElec">Événements</span>
+                    </h1>
+                    <p className="text-gray-300 max-w-2xl mx-auto">
+                        Trouvez l'événement qui vous correspond et réservez vos billets en un clic.
+                    </p>
+                </div>
 
                 {isLoading ? (
-                    <div className="text-center text-blancGlacialNeutre text-xl mt-44 flex justify-center items-center">
-                        <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-blancGlacialNeutre" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                        </svg>
-                        Chargement des événements...
+                    <div className="flex flex-col items-center justify-center py-20">
+                        <Spinner size="lg" color="text-bleuElec" />
+                        <p className="mt-4 text-white font-medium animate-pulse">Chargement des événements...</p>
                     </div>
                 ) : error ? (
-                    <div className="text-center text-red-500 text-xl mt-44 flex justify-center items-center">
-                        <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-red-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                        </svg>
-                        Erreur lors du chargement des événements
+                    <div className="bg-red-500/10 border border-red-500/30 rounded-2xl p-8 text-center max-w-lg mx-auto backdrop-blur-md">
+                        <p className="text-red-400 text-lg font-medium">Erreur lors du chargement des événements.</p>
+                        <button onClick={() => window.location.reload()} className="mt-4 bg-red-500 hover:bg-red-600 text-white px-6 py-2 rounded-lg transition-colors">
+                            Réessayer
+                        </button>
                     </div>
                 ) : Object.entries(eventsByCategory).length > 0 ? (
                     Object.entries(eventsByCategory).map(([category, categoryEvents]) => (
-                        <section key={category} className="mb-12">
-                            <h2 className="text-3xl font-bold text-bleuNuit mb-6">
-                                {category}
-                            </h2>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <section key={category} className="mb-16">
+                            <div className="flex items-center gap-4 mb-8">
+                                <h2 className="text-2xl sm:text-3xl font-bold text-orMetallique">
+                                    {category}
+                                </h2>
+                                <div className="h-px bg-white/20 grow"></div>
+                            </div>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 justify-items-center">
                                 {categoryEvents.map((event) => (
                                     <EventCard
                                         key={event.id}
@@ -130,8 +132,9 @@ function EventsContent() {
                         </section>
                     ))
                 ) : (
-                    <div className="text-center text-blancGlacialNeutre text-xl mt-44">
-                        Aucun événement trouvé pour votre recherche.
+                    <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-12 text-center max-w-lg mx-auto">
+                        <p className="text-white text-xl mb-4">Aucun événement trouvé.</p>
+                        <p className="text-gray-400">Essayez de modifier vos critères de recherche.</p>
                     </div>
                 )}
             </div>
@@ -143,14 +146,9 @@ export default function EventsPage() {
     return (
         <Suspense
             fallback={
-                <div className="min-h-screen flex items-center justify-center">
-                    <div className="text-blancGlacialNeutre text-xl flex items-center">
-                        <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-blancGlacialNeutre" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                        </svg>
-                        Chargement...
-                    </div>
+                <div className="min-h-screen flex flex-col items-center justify-center bg-bleuNuit">
+                    <Spinner size="lg" color="text-bleuElec" />
+                    <p className="mt-4 text-white animate-pulse">Chargement...</p>
                 </div>
             }
         >

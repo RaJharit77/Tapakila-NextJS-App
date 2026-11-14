@@ -6,6 +6,14 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { FaBars, FaSearch, FaSignOutAlt, FaTimes, FaUser } from "react-icons/fa";
 
+// Liens synchronisés avec le dossier /app
+const navLinks = [
+    { name: "Accueil", href: "/" },
+    { name: "Événements", href: "/events" },
+    { name: "À propos", href: "/about" },
+    { name: "Contact", href: "/contact" },
+];
+
 export default function Navbar() {
     const [isScrolled, setIsScrolled] = useState(false);
     const [isSearchFocused, setIsSearchFocused] = useState(false);
@@ -19,14 +27,7 @@ export default function Navbar() {
     const router = useRouter();
 
     useEffect(() => {
-        const handleScroll = () => {
-            if (window.scrollY > 20) {
-                setIsScrolled(true);
-            } else {
-                setIsScrolled(false);
-            }
-        };
-
+        const handleScroll = () => setIsScrolled(window.scrollY > 20);
         window.addEventListener("scroll", handleScroll);
         return () => window.removeEventListener("scroll", handleScroll);
     }, []);
@@ -44,7 +45,6 @@ export default function Navbar() {
                 if (response.ok) {
                     const events = await response.json();
                     const uniqueCategories = [...new Set(events.map((event: { event_category?: string }) => event.event_category || 'Autres'))] as string[];
-                    /*const uniqueCategories = [...new Set(events.map((event: any) => event.event_category || 'Autres'))] as string[];*/
                     setCategories(uniqueCategories.filter(Boolean));
                 }
             } catch (error) {
@@ -64,8 +64,7 @@ export default function Navbar() {
                     return;
                 }
                 const [day, month, year] = searchValue.split('/');
-                const formattedDate = `${year}-${month}-${day}`;
-                router.push(`/events?date=${formattedDate}`);
+                router.push(`/events?date=${year}-${month}-${day}`);
             } else {
                 router.push(`/events?${searchType}=${encodeURIComponent(searchValue)}`);
             }
@@ -86,53 +85,48 @@ export default function Navbar() {
 
     return (
         <nav
-            className={`fixed w-full top-0 z-50 transition-all duration-300 ${isScrolled || isMenuOpen || isSearchOpen
-                ? "bg-bleuNuit shadow-lg transform -translate-y-1"
-                : "bg-transparent transform translate-y-0"
+            className={`fixed w-full top-0 z-50 transition-all duration-500 ${isScrolled || isMenuOpen || isSearchOpen
+                ? "bg-bleuNuit/90 backdrop-blur-lg shadow-lg py-2"
+                : "bg-transparent py-4"
                 }`}
         >
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="flex justify-between items-center h-20">
-                    <div className="flex items-center space-x-4">
-                        <Link href="/">
+                <div className="flex justify-between items-center h-16">
+                    <div className="flex items-center space-x-3">
+                        <Link href="/" className="flex items-center gap-2 group">
                             <Image
                                 src="/img/tapakila.png"
                                 alt="Tapakila App Logo"
-                                width={200}
-                                height={200}
-                                className="rounded-full hover:scale-110 transition-all duration-500 ease-in-out transform object-cover w-16 h-16"
+                                width={100}
+                                height={100}
+                                className="rounded-full group-hover:scale-110 transition-transform duration-300 object-cover w-12 h-12 shadow-md"
                                 priority
                             />
-                        </Link>
-                        <Link
-                            href="/"
-                            className="text-xl font-bold text-blancGlacialNeutre hover:text-transparent hover:bg-clip-text hover:bg-gradient-to-r from-bleuElec to-orMetallique transition-all duration-300 hover-neon"
-                        >
-                            <span className="text-bleuElec">Tap</span>
-                            <span className="text-orMetallique">akila</span>
+                            <span className="text-2xl font-extrabold tracking-tight transition-all duration-300 group-hover-neon">
+                                <span className="text-bleuElec">Tap</span>
+                                <span className="text-orMetallique">akila</span>
+                            </span>
                         </Link>
                     </div>
 
+                    {/* SEARCH BAR DESKTOP */}
                     <form
                         onSubmit={handleSearchSubmit}
-                        className={`hidden lg:flex items-center bg-blancGlacialNeutre text-bleuNuit rounded-xl px-3 py-2 w-1/3 transition-all duration-300 ${isSearchFocused || searchValue
-                            ? "shadow-neon-orMetallique"
-                            : ""
+                        className={`hidden lg:flex items-center bg-white/10 border border-white/20 text-white rounded-full px-4 py-2 w-1/3 transition-all duration-300 ${isSearchFocused ? "bg-white/20 border-orMetallique shadow-[0_0_15px_rgba(255,186,8,0.3)]" : ""
                             }`}
                     >
-                        <div className="relative">
-                            <select
-                                value={searchType}
-                                onChange={(e) => setSearchType(e.target.value as "name" | "location" | "date" | "category")}
-                                className="bg-blancGlacialNeutre text-gray-500 rounded-xl px-3 py-1 text-sm focus:outline-none"
-                            >
-                                <option value="name">Nom</option>
-                                <option value="location">Lieu</option>
-                                <option value="date">Date</option>
-                                <option value="category">Catégorie</option>
-                            </select>
-                        </div>
-                        <FaSearch className="text-gray-500 ml-2" />
+                        <select
+                            value={searchType}
+                            onChange={(e) => setSearchType(e.target.value as any)}
+                            className="bg-transparent text-sm font-medium text-gray-300 focus:outline-none cursor-pointer hover:text-white"
+                        >
+                            <option value="name" className="text-bleuNuit">Nom</option>
+                            <option value="location" className="text-bleuNuit">Lieu</option>
+                            <option value="date" className="text-bleuNuit">Date</option>
+                            <option value="category" className="text-bleuNuit">Catégorie</option>
+                        </select>
+                        <div className="w-px h-4 bg-white/30 mx-3"></div>
+                        <FaSearch className="text-gray-400" />
                         {searchType === "category" ? (
                             <select
                                 value={searchValue}
@@ -140,25 +134,24 @@ export default function Navbar() {
                                     setSearchValue(e.target.value);
                                     handleCategorySelect(e.target.value);
                                 }}
-                                className="ml-2 bg-transparent outline-none w-full"
+                                className="ml-3 bg-transparent text-sm text-white outline-none w-full cursor-pointer"
                             >
-                                <option value="">Toutes catégories</option>
+                                <option value="" className="text-bleuNuit">Toutes catégories</option>
                                 {categories.map((category) => (
-                                    <option key={category} value={category}>
+                                    <option key={category} value={category} className="text-bleuNuit">
                                         {category}
                                     </option>
                                 ))}
                             </select>
                         ) : (
                             <input
-                                type={searchType === "date" ? "text" : "text"}
+                                type="text"
                                 placeholder={
-                                    searchType === "name" ? "Rechercher par nom..." :
-                                        searchType === "location" ? "Rechercher par lieu..." :
-                                            searchType === "date" ? "Rechercher par date (JJ/MM/AAAA)..." :
-                                                "Sélectionner une catégorie..."
+                                    searchType === "name" ? "Rechercher un événement..." :
+                                        searchType === "location" ? "Rechercher un lieu..." :
+                                            "Date (JJ/MM/AAAA)..."
                                 }
-                                className="ml-2 bg-transparent outline-none w-full"
+                                className="ml-3 bg-transparent outline-none w-full text-sm placeholder-gray-400 text-white"
                                 onFocus={() => setIsSearchFocused(true)}
                                 onBlur={() => setIsSearchFocused(false)}
                                 onChange={(e) => setSearchValue(e.target.value)}
@@ -167,175 +160,107 @@ export default function Navbar() {
                         )}
                     </form>
 
-                    <div className="lg:hidden flex items-center">
-                        <button
-                            onClick={() => setIsSearchOpen(!isSearchOpen)}
-                            className={`text-blancGlacialNeutre p-2 ${!isScrolled && !isMenuOpen ? "bg-bleuNuit bg-opacity-50 rounded-full" : ""
-                                }`}
-                        >
-                            <FaSearch size={20} />
-                        </button>
-                    </div>
+                    {/* DESKTOP LINKS */}
+                    <div className="hidden lg:flex items-center space-x-8">
+                        {navLinks.map((link) => (
+                            <Link
+                                key={link.name}
+                                href={link.href}
+                                className="relative text-sm font-medium text-blancGlacialNeutre group overflow-hidden"
+                            >
+                                <span className="group-hover:text-orMetallique transition-colors duration-300">{link.name}</span>
+                                <span className="absolute bottom-0 left-0 w-full h-0.5 bg-orMetallique transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></span>
+                            </Link>
+                        ))}
 
-                    <div className="lg:hidden flex items-center">
-                        <button
-                            onClick={() => setIsMenuOpen(!isMenuOpen)}
-                            className="text-blancGlacialNeutre p-2"
-                        >
-                            {isMenuOpen ? <FaTimes size={20} /> : <FaBars size={20} />}
-                        </button>
-                    </div>
-
-                    <div className="hidden lg:flex items-center space-x-6">
-                        <Link
-                            href="/"
-                            className="text-blancGlacialNeutre hover:text-transparent hover:bg-clip-text hover:bg-gradient-to-r from-bleuElec to-orMetallique transition-all duration-300 hover-neon underline-uncurved"
-                        >
-                            Accueil
-                        </Link>
-                        <Link
-                            href="/events"
-                            className="text-blancGlacialNeutre hover:text-transparent hover:bg-clip-text hover:bg-gradient-to-r from-bleuElec to-orMetallique transition-all duration-300 hover-neon underline-uncurved"
-                        >
-                            Événements
-                        </Link>
-                        <Link
-                            href="/contact"
-                            className="text-blancGlacialNeutre hover:text-transparent hover:bg-clip-text hover:bg-gradient-to-r from-bleuElec to-orMetallique transition-all duration-300 hover-neon underline-uncurved"
-                        >
-                            Contact
-                        </Link>
                         {isLoggedIn ? (
-                            <div className="flex items-center space-x-4">
-                                <span className="text-blancGlacialNeutre">{userName}</span>
-                                <Link
-                                    href="/dashboard/profile"
-                                    className="glowing-button flex items-center text-blancGlacialNeutre hover:text-bleuNuit px-4 py-2"
-                                >
-                                    <FaUser className="mr-2" />
+                            <div className="flex items-center space-x-3 border-l border-white/20 pl-6">
+                                <span className="text-sm font-medium text-gray-300">Salut, {userName}</span>
+                                <Link href="/dashboard/profile" className="p-2.5 bg-bleuElec/20 text-bleuElec rounded-full hover:bg-bleuElec hover:text-white transition-all duration-300">
+                                    <FaUser size={16} />
                                 </Link>
-                                <button
-                                    onClick={handleLogout}
-                                    className="glowing-button flex items-center text-blancGlacialNeutre hover:text-bleuNuit px-4 py-2"
-                                >
-                                    <FaSignOutAlt className="mr-2" />
+                                <button onClick={handleLogout} className="p-2.5 bg-red-500/20 text-red-400 rounded-full hover:bg-red-500 hover:text-white transition-all duration-300">
+                                    <FaSignOutAlt size={16} />
                                 </button>
                             </div>
                         ) : (
                             <Link
                                 href="/login"
-                                className="glowing-button flex items-center text-blancGlacialNeutre hover:text-bleuNuit px-4 py-2"
+                                className="flex items-center gap-2 text-sm font-bold bg-bleuElec text-white px-5 py-2.5 rounded-full hover:bg-orMetallique hover:text-bleuNuit hover:shadow-[0_0_20px_rgba(255,186,8,0.4)] transition-all duration-300"
                             >
-                                <FaUser className="mr-2" />
-                                Se Connecter
+                                <FaUser size={14} />
+                                Connexion
                             </Link>
                         )}
                     </div>
+
+                    {/* MOBILE TOGGLES */}
+                    <div className="lg:hidden flex items-center gap-4">
+                        <button onClick={() => setIsSearchOpen(!isSearchOpen)} className="text-white p-2">
+                            <FaSearch size={20} />
+                        </button>
+                        <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="text-white p-2">
+                            {isMenuOpen ? <FaTimes size={24} /> : <FaBars size={24} />}
+                        </button>
+                    </div>
                 </div>
 
+                {/* MOBILE SEARCH */}
                 {isSearchOpen && (
-                    <div className="lg:hidden mt-4 transition-all duration-300">
-                        <form
-                            onSubmit={handleSearchSubmit}
-                            className={`flex flex-col gap-2 bg-blancGlacialNeutre text-bleuNuit rounded-xl p-3 ${isSearchFocused || searchValue
-                                ? "shadow-neon-orMetallique"
-                                : ""
-                                }`}
-                        >
-                            <select
-                                value={searchType}
-                                onChange={(e) => setSearchType(e.target.value as "name" | "location" | "date" | "category")}
-                                className="bg-blancGlacialNeutre text-bleuNuit rounded-lg px-2 py-1 text-sm focus:outline-none"
-                            >
-                                <option value="name">Nom</option>
-                                <option value="location">Lieu</option>
-                                <option value="date">Date</option>
-                                <option value="category">Catégorie</option>
+                    <div className="lg:hidden mt-4 animate-in fade-in slide-in-from-top-4 duration-300">
+                        <form onSubmit={handleSearchSubmit} className="flex flex-col gap-3 bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-4 shadow-xl">
+                            <select value={searchType} onChange={(e) => setSearchType(e.target.value as any)} className="bg-transparent text-white font-medium text-sm outline-none border-b border-white/20 pb-2">
+                                <option value="name" className="text-bleuNuit">Nom</option>
+                                <option value="location" className="text-bleuNuit">Lieu</option>
+                                <option value="date" className="text-bleuNuit">Date</option>
+                                <option value="category" className="text-bleuNuit">Catégorie</option>
                             </select>
-                            {searchType === "category" ? (
-                                <select
+                            <div className="flex items-center bg-black/20 rounded-lg px-3 py-2">
+                                <FaSearch className="text-gray-400" />
+                                <input
+                                    type="text"
+                                    placeholder="Rechercher..."
+                                    className="ml-3 bg-transparent outline-none w-full text-white placeholder-gray-400 text-sm"
+                                    onChange={(e) => setSearchValue(e.target.value)}
                                     value={searchValue}
-                                    onChange={(e) => {
-                                        setSearchValue(e.target.value);
-                                        handleCategorySelect(e.target.value);
-                                    }}
-                                    className="bg-bleuNuit text-blancGlacialNeutre rounded-lg px-2 py-1 text-sm focus:outline-none"
-                                >
-                                    <option value="">Toutes catégories</option>
-                                    {categories.map((category) => (
-                                        <option key={category} value={category}>
-                                            {category}
-                                        </option>
-                                    ))}
-                                </select>
-                            ) : (
-                                <div className="flex items-center">
-                                    <FaSearch className="text-gray-500" />
-                                    <input
-                                        type={searchType === "date" ? "text" : "text"}
-                                        placeholder={
-                                            searchType === "name" ? "Rechercher par nom..." :
-                                                searchType === "location" ? "Rechercher par lieu..." :
-                                                    "Rechercher par date (JJ/MM/AAAA)..."
-                                        }
-                                        className="ml-2 bg-transparent outline-none w-full"
-                                        onFocus={() => setIsSearchFocused(true)}
-                                        onBlur={() => setIsSearchFocused(false)}
-                                        onChange={(e) => setSearchValue(e.target.value)}
-                                        value={searchValue}
-                                    />
-                                </div>
-                            )}
+                                />
+                            </div>
                         </form>
                     </div>
                 )}
 
+                {/* MOBILE MENU */}
                 {isMenuOpen && (
-                    <div className="lg:hidden mt-4 transition-all duration-300">
-                        <div className="flex flex-col space-y-4 bg-bleuNuit p-4 rounded-lg">
-                            <Link
-                                href="/"
-                                className="text-blancGlacialNeutre hover:text-transparent hover:bg-clip-text hover:bg-gradient-to-r from-bleuElec to-orMetallique transition-all duration-300 hover-neon"
-                            >
-                                Accueil
-                            </Link>
-                            <Link
-                                href="/events"
-                                className="text-blancGlacialNeutre hover:text-transparent hover:bg-clip-text hover:bg-gradient-to-r from-bleuElec to-orMetallique transition-all duration-300 hover-neon"
-                            >
-                                Événements
-                            </Link>
-                            <Link
-                                href="/contact"
-                                className="text-blancGlacialNeutre hover:text-transparent hover:bg-clip-text hover:bg-gradient-to-r from-bleuElec to-orMetallique transition-all duration-300 hover-neon"
-                            >
-                                Contacts
-                            </Link>
-                            {isLoggedIn ? (
-                                <div className="flex flex-col space-y-4">
-                                    <Link
-                                        href="/dashboard/profile"
-                                        className="glowing-button flex items-center justify-center text-blancGlacialNeutre hover:text-bleuNuit px-4 py-2"
-                                    >
-                                        <FaUser className="mr-2" />
-                                        Profil
-                                    </Link>
-                                    <button
-                                        onClick={handleLogout}
-                                        className="glowing-button flex items-center justify-center text-blancGlacialNeutre hover:text-bleuNuit px-4 py-2"
-                                    >
-                                        <FaSignOutAlt className="mr-2" />
-                                        Déconnexion
-                                    </button>
-                                </div>
-                            ) : (
+                    <div className="lg:hidden mt-4 animate-in fade-in slide-in-from-top-4 duration-300 pb-4">
+                        <div className="flex flex-col space-y-2 bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-4 shadow-xl">
+                            {navLinks.map((link) => (
                                 <Link
-                                    href="/login"
-                                    className="glowing-button flex items-center justify-center text-blancGlacialNeutre hover:text-bleuNuit px-4 py-2"
+                                    key={link.name}
+                                    href={link.href}
+                                    className="text-white font-medium py-3 px-4 rounded-xl hover:bg-white/10 transition-colors"
                                 >
-                                    <FaUser className="mr-2" />
-                                    Se Connecter
+                                    {link.name}
                                 </Link>
+                            ))}
+                            <hr className="border-white/10 my-2" />
+                            {isLoggedIn ? (
+                                <>
+                                    <Link href="/dashboard/profile" className="flex items-center gap-3 text-white font-medium py-3 px-4 rounded-xl hover:bg-white/10 transition-colors">
+                                        <FaUser /> Profil de {userName}
+                                    </Link>
+                                    <button onClick={handleLogout} className="flex items-center gap-3 text-red-400 font-medium py-3 px-4 rounded-xl hover:bg-red-500/20 transition-colors">
+                                        <FaSignOutAlt /> Déconnexion
+                                    </button>
+                                </>
+                            ) : (
+                                <div className="flex flex-col gap-2">
+                                    <Link href="/login" className="flex items-center justify-center gap-2 bg-bleuElec text-white font-bold py-3 rounded-xl hover:bg-orMetallique transition-colors">
+                                        <FaUser /> Se Connecter
+                                    </Link>
+                                    <Link href="/signup" className="flex items-center justify-center gap-2 bg-white/10 border border-white/20 text-white font-medium py-3 rounded-xl hover:bg-white/20 transition-colors">
+                                        Créer un compte
+                                    </Link>
+                                </div>
                             )}
                         </div>
                     </div>
