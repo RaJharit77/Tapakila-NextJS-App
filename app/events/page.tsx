@@ -114,7 +114,7 @@ function EventsContent() {
                                 <h2 className="text-2xl sm:text-3xl font-bold text-orMetallique">
                                     {category}
                                 </h2>
-                                <div className="h-px bg-white/20 grow"></div>
+                                <div className="h-px bg-white/20 flex-1"></div>
                             </div>
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 justify-items-center">
                                 {categoryEvents.map((event) => (
@@ -132,9 +132,9 @@ function EventsContent() {
                         </section>
                     ))
                 ) : (
-                    <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-12 text-center max-w-lg mx-auto">
-                        <p className="text-white text-xl mb-4">Aucun événement trouvé.</p>
-                        <p className="text-gray-400">Essayez de modifier vos critères de recherche.</p>
+                    <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-12 text-center max-w-lg mx-auto shadow-xl">
+                        <p className="text-white text-2xl font-bold mb-2">Aucun événement trouvé.</p>
+                        <p className="text-gray-400">Essayez de modifier vos critères de recherche ou revenez plus tard.</p>
                     </div>
                 )}
             </div>

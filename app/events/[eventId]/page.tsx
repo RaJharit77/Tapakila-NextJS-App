@@ -35,8 +35,11 @@ const fetcher = async (url: string) => {
     return response.json();
 };
 
+const FALLBACK_IMAGE = '/img/404NotFound.jpg';
+
 export default function EventPage() {
     const [isLoggedIn, setIsLoggedIn] = useState(false);
+    const [imgSrc, setImgSrc] = useState(FALLBACK_IMAGE);
     const { eventId } = useParams() as { eventId: string };
     const router = useRouter();
     const { event, setEvent, setLoading, setError, clearEvent } = useEventDetailStore();
@@ -55,6 +58,7 @@ export default function EventPage() {
                     location: data.event_place,
                     imageUrl: data.event_image,
                     category: data.event_category || "Autres",
+                    // Mapping effectué UNE SEULE FOIS ici
                     tickets: data.tickets.map(ticket => ({
                         id: ticket.ticket_id,
                         type: ticket.ticket_type,
@@ -62,6 +66,12 @@ export default function EventPage() {
                         status: ticket.ticket_status
                     }))
                 });
+                try {
+                    new URL(data.event_image);
+                    setImgSrc(data.event_image);
+                } catch {
+                    setImgSrc(FALLBACK_IMAGE);
+                }
                 setLoading(false);
                 setError(null);
             },
@@ -133,7 +143,7 @@ export default function EventPage() {
                 {/* Bouton Retour */}
                 <button
                     onClick={() => router.back()}
-                    className="mb-8 flex items-center gap-2 text-gray-300 hover:text-orMetallique transition-colors bg-white/5 px-4 py-2 rounded-full backdrop-blur-md w-max border border-white/10"
+                    className="mb-8 inline-flex items-center gap-2 text-gray-300 hover:text-orMetallique transition-colors bg-white/5 px-4 py-2 rounded-full backdrop-blur-md border border-white/10"
                 >
                     <FaArrowLeft />
                     Retour aux événements
@@ -142,17 +152,19 @@ export default function EventPage() {
                 {/* Carte Principale */}
                 <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl overflow-hidden shadow-2xl">
 
-                    {/* Image de couverture */}
-                    <div className="relative w-full h-75 sm:h-100">
+                    {/* Image de couverture - Hauteur corrigée */}
+                    <div className="relative w-full h-75 sm:h-112.5">
                         <Image
-                            src={event.imageUrl}
+                            src={imgSrc}
                             alt={event.name}
                             fill
                             className="object-cover"
                             priority
+                            onError={() => setImgSrc(FALLBACK_IMAGE)}
                         />
-                        <div className="absolute inset-0 bg-linear-to-t from-bleuNuit to-transparent opacity-80"></div>
-                        <div className="absolute bottom-6 left-6 right-6">
+                        <div className="absolute inset-0 bg-linear-to-t from-bleuNuit via-bleuNuit/60 to-transparent"></div>
+
+                        <div className="absolute bottom-0 left-0 right-0 p-6 sm:p-10">
                             <span className="inline-block bg-orMetallique text-bleuNuit text-sm font-bold px-4 py-1.5 rounded-full mb-4 shadow-lg">
                                 {event.category}
                             </span>
@@ -203,21 +215,15 @@ export default function EventPage() {
 
                             {/* Colonne Billets */}
                             <div className="lg:col-span-1">
-                                <div className="bg-black/30 rounded-2xl p-6 border border-white/10 shadow-xl">
+                                <div className="bg-black/30 rounded-2xl p-6 border border-white/10 shadow-xl lg:sticky lg:top-32 h-fit">
                                     <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
                                         <FaTicketAlt className="text-orMetallique" />
                                         Billets
                                     </h2>
 
-                                    <div className="mb-6">
-                                        <TicketTable
-                                            tickets={event.tickets?.map(ticket => ({
-                                                id: ticket.id,
-                                                type: ticket.type,
-                                                price: ticket.price,
-                                                status: ticket.status,
-                                            })) || []}
-                                        />
+                                    {/* Correction : overflow-x-auto pour mobile et suppression du double map */}
+                                    <div className="mb-6 overflow-x-auto">
+                                        <TicketTable tickets={event.tickets || []} />
                                     </div>
 
                                     <button
