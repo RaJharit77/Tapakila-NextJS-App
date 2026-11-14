@@ -11,6 +11,7 @@ import { Toaster } from 'react-hot-toast';
 import Providers from "./providers";
 import { Metadata } from "next";
 import EventNotifications from "@/components/EventNotification";
+import { LenisProvider } from "@/components/lenis/LenisProvider";
 
 const poppins = Poppins({
   subsets: ["latin"],
@@ -33,7 +34,9 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           <div>
             <Navbar />
             <main className="pt-0">
-              {children}
+              <LenisProvider>
+                {children}
+              </LenisProvider>
               <ToastContainer />
               <Toaster />
               <ToastProvider />
