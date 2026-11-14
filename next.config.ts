@@ -6,43 +6,23 @@ const nextConfig: NextConfig = {
             {
                 source: "/api/:path*",
                 headers: [
-                    {
-                        key: "Access-Control-Allow-Origin",
-                        value: "*",
-                    },
-                    {
-                        key: "Access-Control-Allow-Methods",
-                        value: "GET, POST, PUT, DELETE, OPTIONS",
-                    },
-                    {
-                        key: "Access-Control-Allow-Headers",
-                        value: "*",
-                    },
+                    { key: "Access-Control-Allow-Origin", value: "*" },
+                    { key: "Access-Control-Allow-Methods", value: "GET, POST, PUT, DELETE, OPTIONS" },
+                    { key: "Access-Control-Allow-Headers", value: "*" },
                 ],
-            }
+            },
         ];
     },
     images: {
-
         loader: 'default',
-        domains: ['res.cloudinary.com', 'imagedelivery.net'],
+        qualities: [75, 80],
         remotePatterns: [
-            {
-                protocol: 'https',
-                hostname: '**.cloudinary.com',
-            },
-            {
-                protocol: 'https',
-                hostname: 'imagedelivery.net',
-            },
+            { protocol: 'https', hostname: '**.cloudinary.com' },
+            { protocol: 'https', hostname: 'res.cloudinary.com' },
+            { protocol: 'https', hostname: 'imagedelivery.net' },
+            { protocol: 'https', hostname: 'picsum.photos' },
         ],
-
     },
-    /*eslint: {
-        // Warning: This allows production builds to successfully complete even if
-        // your project has ESLint errors.
-        ignoreDuringBuilds: true,
-    }*/
 };
 
 export default nextConfig;

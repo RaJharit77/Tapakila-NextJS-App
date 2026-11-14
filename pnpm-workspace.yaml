@@ -5,4 +5,5 @@ allowBuilds:
   '@prisma/engines': true
   bcrypt: true
   cypress: true
+  esbuild: true
   prisma: true

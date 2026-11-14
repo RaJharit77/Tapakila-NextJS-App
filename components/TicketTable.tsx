@@ -60,57 +60,67 @@ export default function TicketTable({ tickets, itemsPerPage = 5 }: TicketTablePr
     };
 
     return (
-        <div className="bg-blancCasse text-bleuNuit rounded-lg shadow-md p-6">
-            <h3 className="text-xl font-bold text-gray-800 mb-4">
-                <FaTicketAlt className="inline-block mr-2" />
-                Types de Billets
-            </h3>
+        <div className="w-full">
+            <div className="mb-4">
+                <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                    <FaTicketAlt className="text-orMetallique" />
+                    Types de Billets
+                </h3>
+            </div>
 
-            <table className="w-full text-left mb-4">
-                <thead>
-                    <tr className="border-b">
-                        <th className="py-2">Type</th>
-                        <th className="py-2">Prix</th>
-                        <th className="py-2">Statut</th>
-                        <th className="py-2">Nombre</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {paginatedTickets.map((ticket) => (
-                        <tr key={`${ticket.type}-${ticket.status}`} className="border-b">
-                            <td className="py-3 capitalize">{ticket.type.toLowerCase().replace('_', ' ')}</td>
-                            <td className="py-3">{ticket.price.toLocaleString()} Ar</td>
-                            <td className="py-3">
-                                <span className={`px-2 py-1 rounded-full text-xs ${ticket.status === 'AVAILABLE'
-                                    ? 'bg-green-100 text-green-800'
-                                    : ticket.status === 'SOLD'
-                                        ? 'bg-red-100 text-red-800'
-                                        : 'bg-yellow-100 text-yellow-800'
-                                    }`}>
-                                    {ticket.status === 'AVAILABLE' ? 'Disponible' :
-                                        ticket.status === 'SOLD' ? 'Vendu' : 'Réservé'}
-                                </span>
-                            </td>
-                            <td className="py-3">{ticket.count}</td>
+            <div className="w-full">
+                <table className="w-full text-left text-sm text-gray-300">
+                    <thead className="text-xs uppercase bg-white/5 text-gray-400 border-b border-white/10">
+                        <tr>
+                            <th scope="col" className="px-2 py-3">Type</th>
+                            <th scope="col" className="px-2 py-3">Prix</th>
+                            <th scope="col" className="px-2 py-3">Statut</th>
+                            <th scope="col" className="px-2 py-3 text-right">Nb</th>
                         </tr>
-                    ))}
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                        {paginatedTickets.map((ticket) => (
+                            <tr key={`${ticket.type}-${ticket.status}`} className="border-b border-white/5 hover:bg-white/5 transition-colors">
+                                <td className="px-2 py-3 font-medium text-white truncate max-w-20" title={ticket.type}>
+                                    {ticket.type.toLowerCase().replace('_', ' ')}
+                                </td>
+                                <td className="px-2 py-3 whitespace-nowrap text-gray-300">
+                                    {ticket.price.toLocaleString()} Ar
+                                </td>
+                                <td className="px-2 py-3">
+                                    <span className={`px-2 py-1 text-[10px] font-bold rounded-full ${ticket.status === 'AVAILABLE'
+                                        ? 'bg-green-500/20 text-green-400'
+                                        : ticket.status === 'SOLD'
+                                            ? 'bg-red-500/20 text-red-400'
+                                            : 'bg-yellow-500/20 text-yellow-400'
+                                        }`}>
+                                        {ticket.status === 'AVAILABLE' ? 'Dispo' :
+                                            ticket.status === 'SOLD' ? 'Vendu' : 'Réservé'}
+                                    </span>
+                                </td>
+                                <td className="px-2 py-3 text-right font-bold text-white">
+                                    {ticket.count}
+                                </td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
 
             {totalPages > 1 && (
-                <div className="flex items-center justify-center gap-1 mt-4">
+                <div className="flex items-center justify-center gap-1 mt-6">
                     <button
                         type="button"
                         onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                         disabled={currentPage === 1}
-                        className="px-3 py-1 text-sm rounded-md border border-gray-300 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-gray-100"
+                        className="px-2 py-1 text-xs rounded-md border border-white/20 text-white disabled:opacity-40 disabled:cursor-not-allowed hover:bg-white/10 transition-colors"
                     >
                         Préc.
                     </button>
 
                     {getPageNumbers().map((page, index) =>
                         page === "ellipsis" ? (
-                            <span key={`ellipsis-${index}`} className="px-2 text-gray-400">
+                            <span key={`ellipsis-${index}`} className="px-1 text-gray-500">
                                 …
                             </span>
                         ) : (
@@ -118,9 +128,9 @@ export default function TicketTable({ tickets, itemsPerPage = 5 }: TicketTablePr
                                 key={page}
                                 type="button"
                                 onClick={() => setCurrentPage(page)}
-                                className={`px-3 py-1 text-sm rounded-md border ${page === currentPage
-                                    ? "bg-blue-600 text-white border-blue-600"
-                                    : "border-gray-300 hover:bg-gray-100"
+                                className={`px-2 py-1 text-xs rounded-md border transition-colors ${page === currentPage
+                                    ? "bg-bleuElec text-white border-bleuElec"
+                                    : "border-white/20 text-white hover:bg-white/10"
                                     }`}
                             >
                                 {page}
@@ -132,15 +142,15 @@ export default function TicketTable({ tickets, itemsPerPage = 5 }: TicketTablePr
                         type="button"
                         onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
                         disabled={currentPage === totalPages}
-                        className="px-3 py-1 text-sm rounded-md border border-gray-300 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-gray-100"
+                        className="px-2 py-1 text-xs rounded-md border border-white/20 text-white disabled:opacity-40 disabled:cursor-not-allowed hover:bg-white/10 transition-colors"
                     >
                         Suiv.
                     </button>
                 </div>
             )}
 
-            <div className="mt-4 text-sm text-gray-600">
-                Total: {tickets.length} billets | {uniqueTickets.length} types différents
+            <div className="mt-4 text-xs text-gray-400 text-center">
+                Total: {tickets.length} billets | {uniqueTickets.length} types
             </div>
         </div>
     );

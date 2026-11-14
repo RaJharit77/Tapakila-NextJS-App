@@ -1,2 +1,94 @@
 @import "tailwindcss";
 @import "@heroui/styles";
+
+@theme {
+    --color-bleuNuit: #14213D;
+    --color-orMetallique: #FFBA08;
+    --color-blancCasse: #E5E5E5;
+    --color-blancGlacial: #E3F6F5;
+    --color-blancGlacialNeutre: #E8ECEF;
+    --color-blancAlice: #F0F8FF;
+    --color-blancGlacialBleuPres: #DDEFFF;
+    --color-bleuElec: #0077FF;
+    --color-violetNeon: #9B5DE5;
+    --color-grisAnthracite: #222222;
+    --color-bordeaux: #800020;
+    --color-grisArgent: #C0C0C0;
+    --color-jauneVif: #FFD700;
+}
+
+/* Firefox */
+html {
+    scrollbar-color: #0077FF transparent;
+    /* poignée cyan, fond transparent */
+    scrollbar-width: thin;
+}
+
+/* Chrome, Edge, Safari, Opera */
+::-webkit-scrollbar {
+    width: 10px;
+    /* largeur de la barre verticale */
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #0077FF;
+    /* Bleu cyan */
+    border-radius: 999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #0077FF;
+}
+
+/*@utility hover-neon {
+    transition: all 0.3s ease;
+}
+
+@utility hover-neon {
+    &:hover {
+        color: #ffba08;
+        text-shadow: 0 0 5px #ffba08, 0 0 10px #ffba08,
+            0 0 20px #ffba08, 0 0 40px #ffba08;
+    }
+}
+
+@utility underline-uncurved {
+    position: relative;
+
+    &::after {
+        content: "";
+        position: absolute;
+        left: 0;
+        bottom: -2px;
+        width: 100%;
+        height: 2px;
+        background-color: #ffba08;
+        transform: scaleX(0);
+        transform-origin: right;
+        transition: transform 0.3s ease;
+    }
+
+    &:hover::after {
+        transform: scaleX(1);
+        transform-origin: left;
+    }
+}
+
+@utility glowing-button {
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    background-color: #0077ff;
+    color: #e5e5e5;
+    transition: all 0.3s ease;
+    box-shadow: 0 0 5px #0077ff, 0 0 10px #0077ff, 0 0 20px #0077ff;
+
+    &:hover {
+        background-color: #ffba08;
+        color: #14213d;
+        box-shadow: 0 0 10px #ffba08, 0 0 20px #ffba08, 0 0 40px #ffba08;
+    }
+}*/
