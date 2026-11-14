@@ -6,7 +6,7 @@ declare global {
     var prisma: PrismaClient | undefined;
 }
 
-const databaseUrl = process.env.DATABASE_URL;
+const databaseUrl = process.env.DIRECT_URL;
 
 let prismaClient: PrismaClient;
 
