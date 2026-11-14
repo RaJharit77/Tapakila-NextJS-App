@@ -1,6 +1,8 @@
 @import "tailwindcss";
 @import "@heroui/styles";
 @import './tailwind.css';
+@import "lenis/dist/lenis.css";
+
 
 body {
   font-family: Poppins, sans-serif;
