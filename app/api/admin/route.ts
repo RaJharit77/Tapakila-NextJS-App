@@ -8,10 +8,8 @@ export async function POST(request: Request) {
     const { email, password } = await request.json();
 
     if (!process.env.JWT_SECRET) {
-      return NextResponse.json(
-        { error: "Configuration serveur invalide (JWT_SECRET manquant)" },
-        { status: 500 }
-      );
+      console.error("JWT_SECRET n'est pas défini");
+      return NextResponse.json({ error: "Configuration serveur invalide" }, { status: 500 });
     }
 
     const user = await prisma.admin.findUnique({
@@ -19,37 +17,25 @@ export async function POST(request: Request) {
     });
 
     if (!user) {
-      return NextResponse.json(
-        { error: 'Adresse email ou mot de passe incorrect' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: "Email ou mot de passe incorrect" }, { status: 401 });
     }
 
     const isPasswordValid = await bcrypt.compare(password, user.admin_password);
-    
+
     if (!isPasswordValid) {
-      return NextResponse.json(
-        { error: 'Adresse email ou mot de passe incorrect' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: "Email ou mot de passe incorrect" }, { status: 401 });
     }
 
     const accessToken = sign(
-      { email: user.admin_mail, role: user.admin_role },
+      { email: user.admin_mail, role: user.admin_role, id: user.admin_id },
       process.env.JWT_SECRET,
-      { expiresIn: "1h" }
+      { expiresIn: "24h" }
     );
 
-    return NextResponse.json(
-      { accessToken, redirectTo: '/' },
-      { status: 200 }
-    );
+    return NextResponse.json({ accessToken, redirectTo: "/" }, { status: 200 });
   } catch (error) {
-    console.error('Erreur lors de la connexion', error);
-    return NextResponse.json(
-      { error: 'Erreur interne du serveur' },
-      { status: 500 }
-    );
+    console.error("Erreur lors de la connexion admin:", error);
+    return NextResponse.json({ error: "Erreur interne du serveur" }, { status: 500 });
   }
 }
 
@@ -57,19 +43,14 @@ export async function GET(request: Request) {
   try {
     const token = request.headers.get("Authorization")?.split(" ")[1];
     if (!token) {
-      return NextResponse.json({ authenticated: false, message: "Aucun token reçu" }, { status: 401 });
-    }
-
-    const jwtSecret = process.env.JWT_SECRET;
-    if (!jwtSecret) {
-      return NextResponse.json({ error: "Erreur de configuration serveur" }, { status: 500 });
+      return NextResponse.json({ authenticated: false, message: "Token manquant" }, { status: 401 });
     }
 
     try {
-      const decoded = verify(token, jwtSecret);
+      const decoded = verify(token, process.env.JWT_SECRET!);
       return NextResponse.json({ authenticated: true, user: decoded }, { status: 200 });
     } catch {
-      return NextResponse.json({ authenticated: false, message: "Token expiré ou invalide" }, { status: 401 });
+      return NextResponse.json({ authenticated: false, message: "Token invalide ou expiré" }, { status: 401 });
     }
   } catch {
     return NextResponse.json({ error: "Erreur interne du serveur" }, { status: 500 });
