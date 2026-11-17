@@ -1,4 +1,3 @@
-// app/api/events/[eventId]/route.ts
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/admin-auth";
 import { validateEventPayload } from "@/lib/events";
@@ -6,7 +5,6 @@ import { NextResponse } from "next/server";
 
 type Ctx = { params: Promise<{ eventId: string }> };
 
-/** GET /api/events/:eventId (public) : événement + tickets + statistiques */
 export async function GET(_request: Request, { params }: Ctx) {
   try {
     const { eventId } = await params;
@@ -36,10 +34,6 @@ export async function GET(_request: Request, { params }: Ctx) {
   }
 }
 
-/**
- * PUT / PATCH /api/events/:eventId : modification partielle (seuls les champs envoyés changent).
- * Un admin ne modifie que SES événements ; le super admin peut tout modifier.
- */
 async function updateEvent(request: Request, { params }: Ctx) {
   try {
     const auth = await requireAdmin(request);
@@ -64,8 +58,11 @@ async function updateEvent(request: Request, { params }: Ctx) {
     }
 
     const validation = validateEventPayload(body, "update");
-    if (validation.error) {
-      return NextResponse.json({ error: validation.error }, { status: 400 });
+    if (validation.error || !validation.data) {
+      return NextResponse.json(
+        { error: validation.error ?? "Invalid event payload" },
+        { status: 400 }
+      );
     }
 
     const updated = await prisma.event.update({
@@ -81,11 +78,6 @@ async function updateEvent(request: Request, { params }: Ctx) {
 export const PUT = updateEvent;
 export const PATCH = updateEvent;
 
-/**
- * DELETE /api/events/:eventId
- * Refusé (409) s'il reste des tickets vendus ou réservés : annulez plutôt l'événement
- * (PATCH { "event_status": "CANCLED" }). Les tickets AVAILABLE sont supprimés avec l'événement.
- */
 export async function DELETE(request: Request, { params }: Ctx) {
   try {
     const auth = await requireAdmin(request);

@@ -1,4 +1,3 @@
-// app/api/events/route.ts
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/admin-auth";
 import {
@@ -16,12 +15,6 @@ function toInt(value: string | null, fallback: number, max = Number.MAX_SAFE_INT
   return Number.isNaN(n) || n < 1 ? fallback : Math.min(n, max);
 }
 
-/**
- * GET /api/events (public)
- * Query : page, pageSize, status, category, name, location, date, upcoming=true,
- *         order=asc|desc (tri par date), includeTickets=false
- * Réponse : tableau d'événements (comme avant) + header X-Total-Count
- */
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
@@ -92,7 +85,7 @@ export async function POST(request: Request) {
     }
 
     const validation = validateEventPayload(body, "create");
-    if (validation.error) {
+    if (validation.error || !validation.data) {
       return NextResponse.json({ error: validation.error }, { status: 400 });
     }
     const data = validation.data;
