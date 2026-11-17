@@ -8,10 +8,11 @@ datasource db {
 }
 
 model Admin {
-  admin_id       String  @id
+  admin_id       String    @id
   admin_name     String
-  admin_mail     String  @unique
+  admin_mail     String    @unique
   admin_password String
+  admin_role     AdminRole @default(ADMIN)
   event          Event[]
 }
 
@@ -82,4 +83,9 @@ enum EventStatus {
   CANCLED
   UPLOADED
   DRAFT
+}
+
+enum AdminRole {
+  SUPER_ADMIN
+  ADMIN
 }

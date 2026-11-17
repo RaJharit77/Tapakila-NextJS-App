@@ -1,129 +1,119 @@
 import { prisma } from "@/lib/prisma";
+import { requireAdmin } from "@/lib/admin-auth";
+import { validateEventPayload } from "@/lib/events";
 import { NextResponse } from "next/server";
 
-export async function GET(
-    request: Request,
-    { params }: { params: Promise<{ eventId: string }> }
-) {
+type Ctx = { params: Promise<{ eventId: string }> };
+
+export async function GET(_request: Request, { params }: Ctx) {
+  try {
     const { eventId } = await params;
-    if (!eventId) {
-        return new NextResponse(JSON.stringify({ error: "Event ID is required" }), {
-            status: 400,
-            headers: { 'Content-Type': 'application/json' },
-        });
-    }
+    const event = await prisma.event.findUnique({
+      where: { event_id: eventId },
+      include: { tickets: true },
+    });
+    if (!event) return NextResponse.json({ error: "Event not found" }, { status: 404 });
 
-    try {
-        const event = await prisma.event.findUnique({
-            where: {
-                event_id: eventId,
-            },
-            include: {
-                tickets: true,
-            },
-        });
-
-        if (!event) {
-            return new NextResponse(JSON.stringify({ error: "Event not found" }), {
-                status: 404,
-                headers: { 'Content-Type': 'application/json' },
-            });
-        }
-
-        return new NextResponse(JSON.stringify(event), {
-            status: 200,
-            headers: { 'Content-Type': 'application/json' },
-        });
-    } catch (error) {
-        console.error("Error fetching event:", error);
-        return new NextResponse(JSON.stringify({ error: "Failed to fetch event" }), {
-            status: 500,
-            headers: { 'Content-Type': 'application/json' },
-        });
-    } finally {
-        await prisma.$disconnect();
-    }
+    const count = (s: string) => event.tickets.filter((t) => t.ticket_status === s).length;
+    return NextResponse.json(
+      {
+        ...event,
+        stats: {
+          total: event.tickets.length,
+          available: count("AVAILABLE"),
+          reserved: count("RESERVED"),
+          sold: count("SOLD"),
+          isSoldOut: event.tickets.length > 0 && count("AVAILABLE") === 0,
+        },
+      },
+      { status: 200 }
+    );
+  } catch (error) {
+    console.error("Error fetching event:", error);
+    return NextResponse.json({ error: "Failed to fetch event" }, { status: 500 });
+  }
 }
 
-export async function PUT(
-    request: Request,
-    { params }: { params: Promise<{ eventId: string }> }
-) {
-    console.log(request);
-    try {
-        const { eventId } = await params
-        const body = await request.json()
+async function updateEvent(request: Request, { params }: Ctx) {
+  try {
+    const auth = await requireAdmin(request);
+    if (auth.error) return auth.error;
 
-        const event = await prisma.event.findUnique({
-            where: {
-                event_id: eventId
-            }
-        })
-
-        if (event != null) {
-            const updateEv = await prisma.event.update({
-                where: {
-                    event_id: eventId,
-                },
-                data: body
-            })
-
-            return new NextResponse(JSON.stringify(updateEv), { status: 200 })
-
-        }
-        else {
-            const createEv = await prisma.event.create({
-                data: body
-            })
-
-            return new NextResponse(JSON.stringify(createEv), {
-                status: 201
-            })
-        }
-    } catch (error) {
-        console.error("Error while creating the event", error)
-        return new NextResponse(JSON.stringify({ error: "Repository erro" }),
-            { status: 500 }
-        )
-    }
-
-    finally {
-        await prisma.$disconnect()
-    }
-}
-
-export async function DELETE(
-    request: Request,
-    { params }: { params: Promise<{ eventId: string }> }
-) {
     const { eventId } = await params;
-    try {
-        const event = await prisma.event.findUnique({
-            where: { event_id: eventId },
-        });
+    const existing = await prisma.event.findUnique({
+      where: { event_id: eventId },
+      select: { admin_id: true },
+    });
+    if (!existing) return NextResponse.json({ error: "Event not found" }, { status: 404 });
 
-        if (!event) {
-            return new NextResponse(
-                JSON.stringify({ error: "Event not found" }),
-                { status: 404 }
-            );
-        }
-
-        const deleted = await prisma.event.delete({
-            where: { event_id: eventId },
-        });
-
-        return new NextResponse(JSON.stringify(deleted), {
-            status: 200,
-            headers: { "Content-Type": "application/json" },
-        });
-    } catch (error) {
-        console.error("Error deleting event:", error);
-        return new NextResponse(
-            JSON.stringify({ error: "Repository Error" }),
-            { status: 500 }
-        );
-    } finally {
-        await prisma.$disconnect();
+    if (auth.admin.admin_role !== "SUPER_ADMIN" && existing.admin_id !== auth.admin.admin_id) {
+      return NextResponse.json({ error: "Vous ne pouvez modifier que vos événements" }, { status: 403 });
     }
+
+    let body: unknown;
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json({ error: "Body JSON invalide" }, { status: 400 });
+    }
+
+    const validation = validateEventPayload(body, "update");
+    if (validation.error || !validation.data) {
+      return NextResponse.json(
+        { error: validation.error ?? "Invalid event payload" },
+        { status: 400 }
+      );
+    }
+
+    const updated = await prisma.event.update({
+      where: { event_id: eventId },
+      data: validation.data,
+    });
+    return NextResponse.json(updated, { status: 200 });
+  } catch (error) {
+    console.error("Error while updating the event:", error);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  }
+}
+export const PUT = updateEvent;
+export const PATCH = updateEvent;
+
+export async function DELETE(request: Request, { params }: Ctx) {
+  try {
+    const auth = await requireAdmin(request);
+    if (auth.error) return auth.error;
+
+    const { eventId } = await params;
+    const existing = await prisma.event.findUnique({
+      where: { event_id: eventId },
+      select: { admin_id: true },
+    });
+    if (!existing) return NextResponse.json({ error: "Event not found" }, { status: 404 });
+
+    if (auth.admin.admin_role !== "SUPER_ADMIN" && existing.admin_id !== auth.admin.admin_id) {
+      return NextResponse.json({ error: "Vous ne pouvez supprimer que vos événements" }, { status: 403 });
+    }
+
+    const engaged = await prisma.ticket.count({
+      where: { event_id: eventId, ticket_status: { in: ["SOLD", "RESERVED"] } },
+    });
+    if (engaged > 0) {
+      return NextResponse.json(
+        {
+          error: "Suppression impossible : des tickets sont vendus ou réservés",
+          details: { engagedTickets: engaged, hint: 'PATCH { "event_status": "CANCLED" }' },
+        },
+        { status: 409 }
+      );
+    }
+
+    const [, deleted] = await prisma.$transaction([
+      prisma.ticket.deleteMany({ where: { event_id: eventId } }),
+      prisma.event.delete({ where: { event_id: eventId } }),
+    ]);
+    return NextResponse.json(deleted, { status: 200 });
+  } catch (error) {
+    console.error("Error deleting event:", error);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  }
 }

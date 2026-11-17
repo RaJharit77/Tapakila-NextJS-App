@@ -124,7 +124,8 @@ exports.Prisma.AdminScalarFieldEnum = {
   admin_id: 'admin_id',
   admin_name: 'admin_name',
   admin_mail: 'admin_mail',
-  admin_password: 'admin_password'
+  admin_password: 'admin_password',
+  admin_role: 'admin_role'
 };
 
 exports.Prisma.UserScalarFieldEnum = {
@@ -185,6 +186,11 @@ exports.Prisma.NullsOrder = {
   first: 'first',
   last: 'last'
 };
+exports.AdminRole = exports.$Enums.AdminRole = {
+  SUPER_ADMIN: 'SUPER_ADMIN',
+  ADMIN: 'ADMIN'
+};
+
 exports.EventStatus = exports.$Enums.EventStatus = {
   CANCLED: 'CANCLED',
   UPLOADED: 'UPLOADED',
