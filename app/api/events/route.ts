@@ -1,157 +1,132 @@
+// app/api/events/route.ts
 import { prisma } from "@/lib/prisma";
+import { requireAdmin } from "@/lib/admin-auth";
+import {
+  isEventStatus,
+  isUniqueViolation,
+  nextEventId,
+  parseEventDate,
+  validateEventPayload,
+} from "@/lib/events";
+import type { Prisma } from "@/generated/prisma";
 import { NextResponse } from "next/server";
-import type { EventStatus } from "@/generated/prisma";
 
-/*interface EventWhereClause {
-    event_status?: EventStatus;
-    event_name?: { contains: string; mode: "insensitive" };
-    event_place?: { contains: string; mode: "insensitive" };
-    event_date?: {
-        gte: Date;
-        lt: Date;
-    };
+function toInt(value: string | null, fallback: number, max = Number.MAX_SAFE_INTEGER) {
+  const n = parseInt(value ?? "", 10);
+  return Number.isNaN(n) || n < 1 ? fallback : Math.min(n, max);
 }
 
-interface EventPostData {
-    event_name: string;
-    event_place: string;
-    event_category: string;
-    event_date: string;
-    event_description?: string;
-    event_organizer?: string;
-    event_image?: string;
-    admin_id: string;
-}*/
-
+/**
+ * GET /api/events (public)
+ * Query : page, pageSize, status, category, name, location, date, upcoming=true,
+ *         order=asc|desc (tri par date), includeTickets=false
+ * Réponse : tableau d'événements (comme avant) + header X-Total-Count
+ */
 export async function GET(request: Request) {
-    try {
-        const url = new URL(request.url);
-        const status = url.searchParams.get('status');
-        const page = url.searchParams.get('page');
-        const pageSize = parseInt(url.searchParams.get('pageSize') || "10");
-        const category = url.searchParams.get('category');
-        const name = url.searchParams.get("name");
-        const location = url.searchParams.get("location");
-        const date = url.searchParams.get("date");
+  try {
+    const { searchParams } = new URL(request.url);
+    const page = toInt(searchParams.get("page"), 1);
+    const pageSize = toInt(searchParams.get("pageSize"), 10, 100);
+    const status = searchParams.get("status");
+    const category = searchParams.get("category");
+    const name = searchParams.get("name");
+    const location = searchParams.get("location");
+    const date = searchParams.get("date");
+    const upcoming = searchParams.get("upcoming") === "true";
+    const order = searchParams.get("order") === "desc" ? "desc" : "asc";
+    const includeTickets = searchParams.get("includeTickets") !== "false";
 
-
-        let events = await prisma.event.findMany({
-            include: {
-                tickets: true,
-            },
-            take: pageSize,
-            skip: page ? (parseInt(page) - 1) * pageSize : 0
-        });
-
-        if (status || category || name || location || date) {
-            events = await prisma.event.findMany({
-                where: {
-                    ...(category && { event_category: category }),
-                    ...(status && { event_status: status as EventStatus }),
-                    ...(name && { event_name: { contains: name, mode: "insensitive" } }),
-                    ...(location && { event_place: { contains: location, mode: "insensitive" } }),
-                    ...(date && {
-                        event_date: {
-                            gte: new Date(date),
-                            lt: new Date(new Date(date).getTime() + 24 * 60 * 60 * 1000),
-                        },
-                    })
-                },
-                include: {
-                    tickets: true,
-                },
-                take: pageSize,
-                skip: page ? (parseInt(page) - 1) * pageSize : 0
-            })
-        }
-
-        return new NextResponse(JSON.stringify(events), {
-            status: 200,
-            headers: { 'Content-Type': 'application/json' },
-        });
-    } catch (error) {
-        console.error("Error fetching events:", error);
-        return NextResponse.json(
-            { error: "Failed to fetch events" },
-            { status: 500 }
-        );
-    } finally {
-        await prisma.$disconnect();
+    if (status && !isEventStatus(status)) {
+      return NextResponse.json({ error: "status invalide" }, { status: 400 });
     }
+
+    let dateFilter: Prisma.DateTimeFilter | undefined;
+    if (date) {
+      const d = parseEventDate(date);
+      if (!d) return NextResponse.json({ error: "date invalide" }, { status: 400 });
+      dateFilter = { gte: d, lt: new Date(d.getTime() + 86_400_000) };
+    } else if (upcoming) {
+      dateFilter = { gte: new Date() };
+    }
+
+    const where: Prisma.EventWhereInput = {
+      ...(status && { event_status: status as Prisma.EventWhereInput["event_status"] }),
+      ...(category && { event_category: { equals: category, mode: "insensitive" } }),
+      ...(name && { event_name: { contains: name, mode: "insensitive" } }),
+      ...(location && { event_place: { contains: location, mode: "insensitive" } }),
+      ...(dateFilter && { event_date: dateFilter }),
+    };
+
+    const [events, total] = await prisma.$transaction([
+      prisma.event.findMany({
+        where,
+        include: includeTickets ? { tickets: true } : undefined,
+        orderBy: { event_date: order },
+        take: pageSize,
+        skip: (page - 1) * pageSize,
+      }),
+      prisma.event.count({ where }),
+    ]);
+
+    return NextResponse.json(events, {
+      status: 200,
+      headers: { "X-Total-Count": String(total) },
+    });
+  } catch (error) {
+    console.error("Error fetching events:", error);
+    return NextResponse.json({ error: "Failed to fetch events" }, { status: 500 });
+  }
 }
 
-
-
-
-
-
-
+/** POST /api/events : création (admin ou super admin). admin_id vient du token, jamais du body. */
 export async function POST(request: Request) {
+  try {
+    const auth = await requireAdmin(request);
+    if (auth.error) return auth.error;
+
+    let body: unknown;
     try {
-        const body = await request.json()
-        const { event_name, event_place, event_category, event_date, admin_id } = body
-        const admin = await prisma.admin.findUnique({
-            where: {
-                admin_id: admin_id
-            }
-        })
-
-
-        if (!event_name || !event_place || !event_category || !event_date || !admin_id) {
-            return new NextResponse(JSON.stringify({ error: 'those field must be filled! ' },), { status: 400 })
-        }
-
-        if (admin_id != admin?.admin_id) {
-            return new NextResponse(JSON.stringify({ error: 'Invalid admin' }), { status: 400 })
-        }
-        if (isNaN(new Date(event_date).getTime())) {
-            return new NextResponse(JSON.stringify({ error: 'Invalid date, please use YYYY-MM-DD' }), { status: 400 })
-        }
-
-        else {
-
-            let status: EventStatus = "UPLOADED";
-            const lastCreatedEvent = await prisma.event.findFirst({
-                orderBy: { event_creation_date: "desc" },
-                select: { event_id: true },
-            });
-
-            const lastEventNumber = lastCreatedEvent
-                ? parseInt(lastCreatedEvent.event_id.slice(1))
-                : 0;
-            const newEventNumber = lastEventNumber + 1;
-            const event_id = `E${newEventNumber.toString().padStart(5, "0")}`;
-
-            if (!body.event_category || !body.event_image || !body.event_description) {
-                status = "DRAFT";
-            }
-            const [year, month, day] = event_date.split('/');
-            const date = new Date(`${year}-${month}-${day}`);
-            const newEvent = await prisma.event.create({
-                data: {
-                    event_id,
-                    event_name,
-                    event_place,
-                    event_category,
-                    event_date: date,
-                    event_description: body.event_description,
-                    event_image: body.event_image,
-                    event_organizer: body.event_organizer ?? "",
-                    admin_id,
-                    event_creation_date: new Date(),
-                    event_status: status,
-                },
-            });
-
-            return NextResponse.json(newEvent, { status: 201 });
-        }
-    } catch (error) {
-        console.error("Error while creating the event:", error);
-        return NextResponse.json(
-            { error: "Internal server error" },
-            { status: 500 }
-        );
-    } finally {
-        await prisma.$disconnect();
+      body = await request.json();
+    } catch {
+      return NextResponse.json({ error: "Body JSON invalide" }, { status: 400 });
     }
+
+    const validation = validateEventPayload(body, "create");
+    if (validation.error) {
+      return NextResponse.json({ error: validation.error }, { status: 400 });
+    }
+    const data = validation.data;
+
+    // Un événement incomplet reste en brouillon, sauf statut explicite
+    const status =
+      data.event_status ??
+      (data.event_category && data.event_image && data.event_description ? "UPLOADED" : "DRAFT");
+
+    // Retry en cas de collision d'ID (deux créations simultanées)
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
+        const event = await prisma.event.create({
+          data: {
+            event_id: await nextEventId(prisma),
+            event_name: data.event_name!,
+            event_date: data.event_date!,
+            event_place: data.event_place!,
+            event_category: data.event_category,
+            event_description: data.event_description,
+            event_image: data.event_image,
+            event_organizer: data.event_organizer ?? auth.admin.admin_name,
+            event_tickets_limit_by_user_by_type: data.event_tickets_limit_by_user_by_type,
+            event_status: status,
+            admin_id: auth.admin.admin_id,
+          },
+        });
+        return NextResponse.json(event, { status: 201 });
+      } catch (error) {
+        if (!isUniqueViolation(error) || attempt === 2) throw error;
+      }
+    }
+  } catch (error) {
+    console.error("Error while creating the event:", error);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  }
 }
