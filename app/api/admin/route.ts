@@ -8,8 +8,10 @@ export async function POST(request: Request) {
     const { email, password } = await request.json();
 
     if (!process.env.JWT_SECRET) {
-      console.error("JWT_SECRET manquant");
-      return NextResponse.json({ error: "Erreur de configuration serveur" }, { status: 500 });
+      return NextResponse.json(
+        { error: "Configuration serveur invalide (JWT_SECRET manquant)" },
+        { status: 500 }
+      );
     }
 
     const user = await prisma.admin.findUnique({
@@ -17,28 +19,37 @@ export async function POST(request: Request) {
     });
 
     if (!user) {
-      return NextResponse.json({ error: "Utilisateur non trouvé" }, { status: 404 });
+      return NextResponse.json(
+        { error: 'Adresse email ou mot de passe incorrect' },
+        { status: 401 }
+      );
     }
 
     const isPasswordValid = await bcrypt.compare(password, user.admin_password);
-
+    
     if (!isPasswordValid) {
-      return NextResponse.json({ error: "Mot de passe incorrect" }, { status: 401 });
+      return NextResponse.json(
+        { error: 'Adresse email ou mot de passe incorrect' },
+        { status: 401 }
+      );
     }
 
     const accessToken = sign(
       { email: user.admin_mail, role: user.admin_role },
       process.env.JWT_SECRET,
-      { expiresIn: "24h" }
+      { expiresIn: "1h" }
     );
 
     return NextResponse.json(
-      { accessToken, redirectTo: "/" },
+      { accessToken, redirectTo: '/' },
       { status: 200 }
     );
   } catch (error) {
-    console.error("Erreur lors de la connexion:", error);
-    return NextResponse.json({ error: "Erreur interne du serveur" }, { status: 500 });
+    console.error('Erreur lors de la connexion', error);
+    return NextResponse.json(
+      { error: 'Erreur interne du serveur' },
+      { status: 500 }
+    );
   }
 }
 
