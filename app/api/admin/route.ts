@@ -5,26 +5,43 @@ import bcrypt from "bcrypt";
 
 export async function POST(request: Request) {
   try {
-    const { email, password } = await request.json();
+    const body = await request.json();
+    const { email, password } = body;
+
+    if (!email || !password) {
+      console.log("❌ Requête invalide : email ou mot de passe manquant");
+      return NextResponse.json({ error: "Email et mot de passe requis" }, { status: 400 });
+    }
 
     if (!process.env.JWT_SECRET) {
       console.error("JWT_SECRET n'est pas défini");
       return NextResponse.json({ error: "Configuration serveur invalide" }, { status: 500 });
     }
 
+    const normalizedEmail = email.trim().toLowerCase();
+
     const user = await prisma.admin.findUnique({
-      where: { admin_mail: email },
+      where: { admin_mail: normalizedEmail },
     });
 
     if (!user) {
+      console.log(`❌ Admin introuvable avec l'email : ${normalizedEmail}`);
       return NextResponse.json({ error: "Email ou mot de passe incorrect" }, { status: 401 });
+    }
+
+    if (!user.admin_password.startsWith("$2")) {
+      console.error("❌ ERREUR CRITIQUE : Le mot de passe en base n'est pas haché avec bcrypt !");
+      return NextResponse.json({ error: "Configuration de sécurité invalide" }, { status: 500 });
     }
 
     const isPasswordValid = await bcrypt.compare(password, user.admin_password);
 
     if (!isPasswordValid) {
+      console.log(`❌ Mot de passe incorrect pour l'admin : ${normalizedEmail}`);
       return NextResponse.json({ error: "Email ou mot de passe incorrect" }, { status: 401 });
     }
+
+    console.log(`✅ Connexion réussie pour : ${normalizedEmail}`);
 
     const accessToken = sign(
       { email: user.admin_mail, role: user.admin_role, id: user.admin_id },
