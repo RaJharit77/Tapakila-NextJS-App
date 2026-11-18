@@ -1,98 +1,75 @@
-// app/api/admins/route.ts
 import { prisma } from "@/lib/prisma";
-import { requireAdmin } from "@/lib/admin-auth";
-import { isUniqueViolation } from "@/lib/events";
-import { AdminRole } from "@/generated/prisma";
-import bcrypt from "bcrypt";
-import { randomUUID } from "crypto";
+import { sign, verify } from "jsonwebtoken";
 import { NextResponse } from "next/server";
+import bcrypt from "bcrypt";
 
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-/** POST /api/admins : création d'un admin (super admin uniquement) */
 export async function POST(request: Request) {
   try {
-    const auth = await requireAdmin(request, { superOnly: true });
-    if (auth.error) return auth.error;
+    const body = await request.json();
+    const { email, password } = body;
 
-    let body: Record<string, unknown>;
-    try {
-      body = await request.json();
-    } catch {
-      return NextResponse.json({ error: "Body JSON invalide" }, { status: 400 });
+    if (!email || !password) {
+      console.log("❌ Requête invalide : email ou mot de passe manquant");
+      return NextResponse.json({ error: "Email et mot de passe requis" }, { status: 400 });
     }
 
-    const { admin_name, admin_mail, admin_password, admin_role } = body;
-
-    if (typeof admin_name !== "string" || !admin_name.trim()) {
-      return NextResponse.json({ error: "admin_name est requis" }, { status: 400 });
-    }
-    if (typeof admin_mail !== "string" || !EMAIL_RE.test(admin_mail.trim())) {
-      return NextResponse.json({ error: "admin_mail invalide" }, { status: 400 });
-    }
-    if (typeof admin_password !== "string" || admin_password.length < 8) {
-      return NextResponse.json(
-        { error: "admin_password doit contenir au moins 8 caractères" },
-        { status: 400 }
-      );
-    }
-    if (admin_role !== undefined && !Object.values(AdminRole).includes(admin_role as AdminRole)) {
-      return NextResponse.json(
-        { error: `admin_role doit valoir : ${Object.values(AdminRole).join(", ")}` },
-        { status: 400 }
-      );
+    if (!process.env.JWT_SECRET) {
+      console.error("JWT_SECRET n'est pas défini");
+      return NextResponse.json({ error: "Configuration serveur invalide" }, { status: 500 });
     }
 
-    const email = admin_mail.trim().toLowerCase();
-    const existing = await prisma.admin.findUnique({
-      where: { admin_mail: email },
-      select: { admin_id: true },
-    });
-    if (existing) {
-      return NextResponse.json({ error: "Un admin avec cet email existe déjà" }, { status: 409 });
-    }
+    const normalizedEmail = email.trim().toLowerCase();
 
-    const created = await prisma.admin.create({
-      data: {
-        admin_id: "ADM" + randomUUID().split("-")[0],
-        admin_name: admin_name.trim(),
-        admin_mail: email,
-        admin_password: await bcrypt.hash(admin_password, 12),
-        admin_role: (admin_role as AdminRole | undefined) ?? AdminRole.ADMIN,
-      },
-      // le mot de passe n'est jamais renvoyé
-      select: { admin_id: true, admin_name: true, admin_mail: true, admin_role: true },
+    const user = await prisma.admin.findUnique({
+      where: { admin_mail: normalizedEmail },
     });
 
-    return NextResponse.json({ admin: created, message: "Admin créé." }, { status: 201 });
+    if (!user) {
+      console.log(`❌ Admin introuvable avec l'email : ${normalizedEmail}`);
+      return NextResponse.json({ error: "Email ou mot de passe incorrect" }, { status: 401 });
+    }
+
+    if (!user.admin_password.startsWith("$2")) {
+      console.error("❌ ERREUR CRITIQUE : Le mot de passe en base n'est pas haché avec bcrypt !");
+      return NextResponse.json({ error: "Configuration de sécurité invalide" }, { status: 500 });
+    }
+
+    const isPasswordValid = await bcrypt.compare(password, user.admin_password);
+
+    if (!isPasswordValid) {
+      console.log(`❌ Mot de passe incorrect pour l'admin : ${normalizedEmail}`);
+      return NextResponse.json({ error: "Email ou mot de passe incorrect" }, { status: 401 });
+    }
+
+    console.log(`✅ Connexion réussie pour : ${normalizedEmail}`);
+
+    const accessToken = sign(
+      { email: user.admin_mail, role: user.admin_role, id: user.admin_id },
+      process.env.JWT_SECRET,
+      { expiresIn: "24h" }
+    );
+
+    return NextResponse.json({ accessToken, redirectTo: "/" }, { status: 200 });
   } catch (error) {
-    if (isUniqueViolation(error)) {
-      return NextResponse.json({ error: "Un admin avec cet email existe déjà" }, { status: 409 });
-    }
-    console.error("Erreur lors de la création de l'admin:", error);
+    console.error("Erreur lors de la connexion admin:", error);
     return NextResponse.json({ error: "Erreur interne du serveur" }, { status: 500 });
   }
 }
 
-/** GET /api/admins : liste des admins (super admin uniquement) */
 export async function GET(request: Request) {
   try {
-    const auth = await requireAdmin(request, { superOnly: true });
-    if (auth.error) return auth.error;
+    const token = request.headers.get("Authorization")?.split(" ")[1];
+    if (!token) {
+      return NextResponse.json({ authenticated: false, message: "Token manquant" }, { status: 401 });
+    }
 
-    const admins = await prisma.admin.findMany({
-      select: {
-        admin_id: true,
-        admin_name: true,
-        admin_mail: true,
-        admin_role: true,
-        _count: { select: { event: true } },
-      },
-      orderBy: { admin_id: "asc" },
-    });
-    return NextResponse.json(admins, { status: 200 });
-  } catch (error) {
-    console.error("Erreur lors de la récupération des admins:", error);
+    try {
+      const decoded = verify(token, process.env.JWT_SECRET!);
+      return NextResponse.json({ authenticated: true, user: decoded }, { status: 200 });
+    } catch {
+      return NextResponse.json({ authenticated: false, message: "Token invalide ou expiré" }, { status: 401 });
+    }
+  } catch {
     return NextResponse.json({ error: "Erreur interne du serveur" }, { status: 500 });
   }
 }
