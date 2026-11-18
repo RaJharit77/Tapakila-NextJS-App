@@ -65,7 +65,7 @@
       "cypress": "^15.21.2",
       "eslint": "^9.39.5",
       "eslint-config-next": "16.4.5",
-      "postcss": "^8.5.32",
+      "postcss": "^8.5.33",
       "prisma": "7.10.1",
       "tailwindcss": "^4.3.5",
       "tsx": "^4.23.15",
