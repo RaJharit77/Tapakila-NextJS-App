@@ -51,8 +51,6 @@ export async function PUT(
             JSON.stringify({ error: "Repository error" }),
             { status: 500 }
         );
-    } finally {
-        await prisma.$disconnect();
     }
 }
 
