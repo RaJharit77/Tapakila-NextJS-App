@@ -36,18 +36,17 @@ export async function PUT(
         const body = await request.json();
         const { id } = await params;
 
-        const updatedUser = await prisma.user.update({
-            where: { user_id: id },
+        const updatedMessage = await prisma.message.update({
+            where: { message_id: id },
             data: {
-                user_name: body.user_name,
-                user_address: body.user_address,
-                user_city: body.user_city
+                message_subject: body.message_subject,
+                message_content: body.message_content,
             }
         });
 
-        return new NextResponse(JSON.stringify(updatedUser), { status: 200 });
+        return new NextResponse(JSON.stringify(updatedMessage), { status: 200 });
     } catch (e) {
-        console.error("Error updating user:", e);
+        console.error("Error updating message:", e);
         return new NextResponse(
             JSON.stringify({ error: "Repository error" }),
             { status: 500 }
